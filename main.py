@@ -10,8 +10,14 @@ def main():
     if not token:
         print("❌ Ошибка: не найден TELEGRAM_BOT_TOKEN")
         return
+
+    # Создаём приложение
     app = ApplicationBuilder().token(token).build()
+
+    # Добавляем команду /start
     app.add_handler(CommandHandler("start", start))
+
+    # Запускаем поллинг
     app.run_polling()
 
 if __name__ == "__main__":
