@@ -1,471 +1,351 @@
 import os
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import ReplyKeyboardMarkup, Update
+from telegram.ext import (
+    Application, CommandHandler, MessageHandler, ContextTypes, filters
+)
 
 # =========================
-# Настройки
+# НАСТРОЙКИ КНОПОК
 # =========================
-
-BOT_NAME = "FarangProBot"
-
 BTN_BACK = "⬅️ Назад"
 BTN_HOME = "🏠 Главное меню"
 
 # =========================
-# Дерево меню (структура)
+# ДЕРЕВО МЕНЮ (СТРУКТУРА)
 # =========================
-# Узел:
+# Формат узла:
 # {
-#   "title": "Текст кнопки",
-#   "children": [child_id, ...]  # если это меню
-#   "text": "Ответ"              # если это лист (контент)
+#   "_text": "Текст, который бот пишет при входе в раздел" (опционально),
+#   "_children": { "Кнопка": { ...подраздел... }, ... }
 # }
+MENU_TREE: Dict[str, Any] = {
+    "_text": "Выбери пункт из меню 👇",
+    "_children": {
+        "🏠 Аренда": {
+            "_text": "Выбери категорию аренды:",
+            "_children": {
+                # ПРИМЕРЫ — можешь заменить на свои
+                "Квартиры/Кондо": {"_text": "Квартиры/Кондо — сюда добавим гайды и чек-листы.", "_children": {}},
+                "Дома": {"_text": "Дома — сюда добавим гайды и чек-листы.", "_children": {}},
+                "Договор и депозит": {"_text": "Договор и депозит — важные нюансы.", "_children": {}},
+            }
+        },
 
-NODES: Dict[str, Dict[str, Any]] = {
-    # --- Корень ---
-    "root": {
-        "title": "root",
-        "children": [
-            "home_tips",
-            "work_taxes",
-            "pets_relocation",
-            "culture",
-            "excursions_guides",
-            "photo_video",
-        ],
-    },
+        "🧾 Визы": {
+            "_text": "Доступные визы: ED, DTV, Семейная, Бизнес, Пенсионная, Элит и продления штампов.",
+            "_children": {
+                "ED (учебная)": {"_text": "ED-виза — структура раздела (позже наполним).", "_children": {}},
+                "DTV (Digital Nomad)": {"_text": "DTV — условия, документы, подача.", "_children": {}},
+                "Семейная": {"_text": "Семейная виза — варианты и требования.", "_children": {}},
+                "Бизнес": {"_text": "Бизнес-виза — как легально работать.", "_children": {}},
+                "Пенсионная": {"_text": "Пенсионная — требования и продления.", "_children": {}},
+                "Элит": {"_text": "Elite — пакеты, цены, нюансы.", "_children": {}},
+                "Продление штампов": {"_text": "Продления — сроки, штрафы, лайфхаки.", "_children": {}},
+            }
+        },
 
-    # =========================
-    # Советы по быту и сервисы
-    # =========================
-    "home_tips": {
-        "title": "🏠 Советы по быту и сервисы для дома",
-        "text": "Раздел в разработке. Сюда добавим: доставка, связи/интернет, медицина, банки, сервисы, бытовые лайфхаки.",
-    },
+        "💱 Обмен валют": {
+            "_text": "Обмен валют — курсы, где менять, безопасность.",
+            "_children": {
+                "Где выгоднее менять": {"_text": "Где выгоднее — банки/обменники/приложения.", "_children": {}},
+                "Безопасность": {"_text": "Как не попасть на подмену/фейки.", "_children": {}},
+                "Крипта": {"_text": "Крипта — легальность и риски (общая инфа).", "_children": {}},
+            }
+        },
 
-    # =========================
-    # Работа и налоги
-    # =========================
-    "work_taxes": {
-        "title": "💼 Работа и налоги",
-        "children": [
-            "work_dn",
-            "work_tax_resident",
-            "work_crypto_freelance",
-            "work_illegal",
-            "work_long_term_taxes",
-        ],
-    },
-    "work_dn": {
-        "title": "🌍 Digital Nomad и удалёнка",
-        "text": "Заглушка: правила для удалёнки, счета, платежи, риски, как безопаснее жить и работать.",
-    },
-    "work_tax_resident": {
-        "title": "🧾 Налоговое резидентство (180 дней и декларации)",
-        "text": "Заглушка: резидентство, 180 дней, когда возникают обязательства, какие документы вести.",
-    },
-    "work_crypto_freelance": {
-        "title": "🪙 Крипта и фриланс в Таиланде",
-        "text": "Заглушка: общие принципы, риски, что точно нельзя, как не светиться лишний раз.",
-    },
-    "work_illegal": {
-        "title": "⚠️ Как не попасть под нелегальную деятельность",
-        "text": "Заглушка: типовые ошибки фарангов, что считается работой, чего избегать.",
-    },
-    "work_long_term_taxes": {
-        "title": "📌 Налоги, если живёшь долго",
-        "text": "Заглушка: долгий срок, что учитывать, какие вопросы задавать юристу/бухгалтеру.",
-    },
+        "📸 Фото и видео": {
+            "_text": "Фото и видео — услуги, цены, где искать.",
+            "_children": {
+                "📷 Фотосессии на локациях": {"_text": "Фотосессии — подбор локаций/стиля/цены.", "_children": {}},
+                "🎥 Видео туры и дроны": {"_text": "Видео/дроны — условия, разрешения, цены.", "_children": {}},
+                "📣 Контент для блогеров": {"_text": "Контент-пакеты для блогеров.", "_children": {}},
+            }
+        },
 
-    # =========================
-    # Животные и переезд
-    # =========================
-    "pets_relocation": {
-        "title": "🐾 Животные и переезд",
-        "children": [
-            "pets_import_th",
-            "pets_docs",
-            "pets_vet_care",
-            "pets_export_th",
-            "pets_practical",
-        ],
-    },
+        "🌴 Туры и экскурсии": {
+            "_text": "Экскурсии по Таиланду: острова, сафари, шоу, храмы — всё под ключ.",
+            "_children": {
+                "🚗 Однодневные поездки": {
+                    "_text": "Однодневные поездки — выбери маршрут:",
+                    "_children": {
+                        "Паттайя → Бангкок (Mahanakhon, храмы, шопинг)": {
+                            "_text": "Маршрут Паттайя → Бангкок (Mahanakhon, храмы, шопинг).",
+                            "_children": {}
+                        },
+                        "Паттайя → Районг (водопады, рынок фруктов)": {
+                            "_text": "Маршрут Паттайя → Районг (водопады, рынок фруктов).",
+                            "_children": {}
+                        },
+                        "Паттайя → Кхао Кхео (зоопарк и горы)": {
+                            "_text": "Маршрут Паттайя → Кхао Кхео (зоопарк и горы).",
+                            "_children": {}
+                        },
+                    }
+                },
 
-    # Ввоз питомца в Таиланд
-    "pets_import_th": {
-        "title": "✈️ Ввоз питомца в Таиланд",
-        "children": [
-            "pets_import_rules",
-            "pets_import_allowed",
-            "pets_import_vaccines",
-            "pets_import_flight",
-            "pets_import_customs",
-        ],
-    },
-    "pets_import_rules": {"title": "📄 Правила и документы", "text": "Заглушка: какие документы нужны, общий порядок действий."},
-    "pets_import_allowed": {"title": "✅ Разрешённые виды животных", "text": "Заглушка: какие животные допускаются, ограничения."},
-    "pets_import_vaccines": {"title": "💉 Справки, микрочип и прививки", "text": "Заглушка: чип, вакцинации, сроки, что проверяют."},
-    "pets_import_flight": {"title": "🛫 Полёт и авиаперевозка", "text": "Заглушка: карго/в салоне, переноска, требования авиакомпаний."},
-    "pets_import_customs": {"title": "🛃 Таможня и получение в аэропорту", "text": "Заглушка: где получать, какие кабинеты/службы, типовые вопросы."},
+                "🏝 Морские туры": {
+                    "_text": "Морские туры — выбери:",
+                    "_children": {
+                        "Ко Лан — острова рядом с Паттайей": {"_text": "Ко Лан — детали тура/цены/советы.", "_children": {}},
+                        "Ко Самет — уединённый отдых": {"_text": "Ко Самет — детали тура/цены/советы.", "_children": {}},
+                        "Частные лодки и рыбалка": {"_text": "Частные лодки/рыбалка — форматы и цены.", "_children": {}},
+                    }
+                },
 
-    # Документы и требования
-    "pets_docs": {
-        "title": "📑 Документы и требования",
-        "children": [
-            "pets_docs_forms",
-            "pets_docs_dld",
-            "pets_docs_terms",
-            "pets_docs_examples",
-        ],
-    },
-    "pets_docs_forms": {
-        "title": "🧾 Формы и сертификаты (Vet Health Certificate, Export Permit)",
-        "text": "Заглушка: какие формы бывают, где берутся, кто заполняет.",
-    },
-    "pets_docs_dld": {
-        "title": "🏛️ Где получить разрешение в DLD (Department of Livestock Development)",
-        "text": "Заглушка: DLD, куда обращаться, что подготовить.",
-    },
-    "pets_docs_terms": {"title": "⏳ Сроки действия справок", "text": "Заглушка: сроки, почему важно попасть в окно дат."},
-    "pets_docs_examples": {"title": "📝 Примеры заполнения", "text": "Заглушка: примеры/шаблоны заполнения."},
+                "🧑‍💼 Гиды и частные туры": {
+                    "_text": "Гиды и частные туры — выбери:",
+                    "_children": {
+                        "Русскоязычные гиды": {"_text": "Русскоязычные гиды — где искать и как выбирать.", "_children": {}},
+                        "Тайские гиды (англ / тай)": {"_text": "Тайские гиды — где искать и как выбирать.", "_children": {}},
+                        "Персональные маршруты": {"_text": "Персональные маршруты — сбор ТЗ и планирование.", "_children": {}},
+                    }
+                },
 
-    # Ветеринария и уход
-    "pets_vet_care": {
-        "title": "🏥 Ветеринария и уход",
-        "children": [
-            "pets_vet_clinics",
-            "pets_vet_vaccines",
-            "pets_vet_insurance",
-            "pets_vet_grooming",
-            "pets_vet_required",
-        ],
-    },
-    "pets_vet_clinics": {"title": "🏥 Ветклиники и госпитали (Бангкок, Паттайя, Чиангмай)", "text": "Заглушка: список/критерии выбора клиники."},
-    "pets_vet_vaccines": {"title": "💉 Вакцинация, анализы, чипирование", "text": "Заглушка: базовый чек-лист."},
-    "pets_vet_insurance": {"title": "🛡️ Страховка для животных", "text": "Заглушка: опции, что покрывают/не покрывают."},
-    "pets_vet_grooming": {"title": "✂️ Груминг, передержка, передвижение по стране", "text": "Заглушка: груминг/передержка, правила перевозки."},
-    "pets_vet_required": {"title": "📌 Вакцины, которых требуют в Таиланде", "text": "Заглушка: какие прививки обычно проверяют."},
+                "✨ Необычные места": {
+                    "_text": "Необычные места — выбери:",
+                    "_children": {
+                        "Храмы вне туристических маршрутов": {"_text": "Нетуристические храмы — подборки.", "_children": {}},
+                        "Кофейни с атмосферой": {"_text": "Кофейни — подборки и районы.", "_children": {}},
+                        "Ночные рынки и деревни": {"_text": "Ночные рынки/деревни — куда ехать.", "_children": {}},
+                    }
+                },
+            }
+        },
 
-    # Вывоз из Таиланда
-    "pets_export_th": {
-        "title": "🌍 Вывоз из Таиланда",
-        "children": [
-            "pets_export_docs",
-            "pets_export_dld",
-            "pets_export_flight",
-            "pets_export_routes",
-        ],
-    },
-    "pets_export_docs": {"title": "📄 Документы для вывоза в другие страны", "text": "Заглушка: общий список документов под страны."},
-    "pets_export_dld": {"title": "🏛️ Справки в DLD и сертификаты здоровья", "text": "Заглушка: как получать и где."},
-    "pets_export_flight": {"title": "🧳 Перелёт и транспортные контейнеры", "text": "Заглушка: контейнер, требования IATA, размеры."},
-    "pets_export_routes": {"title": "🗺️ Примеры маршрутов (в Россию, Европу, Латинскую Америку)", "text": "Заглушка: примеры логики маршрутов."},
+        "🛡️ Страховки": {
+            "_text": "Страховки — здоровье, путешествия, авто/байк, имущество.",
+            "_children": {
+                "Медицинская": {"_text": "Медицинская страховка — как выбрать.", "_children": {}},
+                "Путешествия": {"_text": "Travel страховка — нюансы.", "_children": {}},
+                "Авто/байк": {"_text": "Авто/байк страховка — что покрывает.", "_children": {}},
+            }
+        },
 
-    # Практические советы
-    "pets_practical": {
-        "title": "🐕 Практические советы",
-        "children": [
-            "pets_practical_housing",
-            "pets_practical_prepare",
-            "pets_practical_forbidden",
-            "pets_practical_stress",
-            "pets_practical_stories",
-        ],
-    },
-    "pets_practical_housing": {"title": "🏠 Как найти жильё с животным", "text": "Заглушка: как спрашивать, что писать хозяину, депозит."},
-    "pets_practical_prepare": {"title": "🧰 Как подготовить кота или собаку к полёту", "text": "Заглушка: переноска, привычка, вода/еда, спокойствие."},
-    "pets_practical_forbidden": {"title": "🚫 Что нельзя ввозить", "text": "Заглушка: типовые ограничения."},
-    "pets_practical_stress": {"title": "🧘 Как снизить стресс у животного", "text": "Заглушка: адаптация, режим, переноска, безопасные методы."},
-    "pets_practical_stories": {"title": "📖 Реальные истории переезда", "text": "Заглушка: истории/кейсы."},
+        "⚠️ Поведение и культура": {
+            "_text": "Поведение и культура — что важно знать в Таиланде.",
+            "_children": {
+                "{ } Прежде чем ты начнёшь": {
+                    "_text": "Прежде чем ты начнёшь — базовые принципы:",
+                    "_children": {
+                        "Никто не ждёт — но и не мешает": {"_text": "Никто не ждёт — но и не мешает.", "_children": {}},
+                        "Уважение как валюта": {"_text": "Уважение как валюта.", "_children": {}},
+                        "Почему “улыбка” не значит “друг”": {"_text": "Почему улыбка не значит дружба.", "_children": {}},
+                    }
+                },
 
-    # =========================
-    # Поведение и культура
-    # =========================
-    "culture": {
-        "title": "⚠️ Поведение и культура",
-        "children": [
-            "culture_before",
-            "culture_taboos",
-            "culture_mistakes",
-            "culture_respect",
-            "culture_sabai",
-        ],
-    },
+                "🙏 Тайская культура и табу": {
+                    "_text": "Тайская культура и табу — выбери тему:",
+                    "_children": {
+                        "Король, религия, и “святые” темы": {"_text": "Король/религия — что нельзя.", "_children": {}},
+                        "Как вести себя в храме": {"_text": "Храм — одежда/поведение.", "_children": {}},
+                        "Что нельзя делать (жесты, касания, ноги, голова)": {"_text": "Жесты/касания/ноги/голова — табу.", "_children": {}},
+                        "Одежда, интим, общественные нормы": {"_text": "Одежда/интим/нормы — как не облажаться.", "_children": {}},
+                    }
+                },
 
-    "culture_before": {
-        "title": "{ } Прежде чем ты начнёшь",
-        "children": [
-            "culture_before_nobody_waits",
-            "culture_before_respect_currency",
-            "culture_before_smile_not_friend",
-        ],
-    },
-    "culture_before_nobody_waits": {"title": "🧩 Никто не ждёт — но и не мешает", "text": "Заглушка: как устроено отношение к фарангам и почему это нормально."},
-    "culture_before_respect_currency": {"title": "💠 Уважение как валюта", "text": "Заглушка: почему уважение важнее правоты."},
-    "culture_before_smile_not_friend": {"title": "🙂 Почему “улыбка” не значит “друг”", "text": "Заглушка: улыбка как социальная маска, не обещание близости."},
+                "🙂 Типичные ошибки фарангов": {
+                    "_text": "Типичные ошибки фарангов — выбери:",
+                    "_children": {
+                        "“Я заплатил — значит, можно”": {"_text": "Почему это не работает.", "_children": {}},
+                        "Агрессия и алкоголь": {"_text": "Агрессия и алкоголь — последствия.", "_children": {}},
+                        "Тайки, бары и чувство меры": {"_text": "Тайки/бары — здравый смысл.", "_children": {}},
+                        "Нелегальная работа, мотоциклы без прав": {"_text": "Нелегальная работа/байк без прав — риски.", "_children": {}},
+                    }
+                },
 
-    "culture_taboos": {
-        "title": "🙏 Тайская культура и табу",
-        "children": [
-            "culture_taboos_king_religion",
-            "culture_taboos_temple",
-            "culture_taboos_gestures",
-            "culture_taboos_clothes",
-        ],
-    },
-    "culture_taboos_king_religion": {"title": "👑 Король, религия и “святые” темы", "text": "Заглушка: что нельзя обсуждать/шутить и почему."},
-    "culture_taboos_temple": {"title": "🏯 Как вести себя в храме", "text": "Заглушка: обувь, одежда, фото, тишина, уважение."},
-    "culture_taboos_gestures": {"title": "🚫 Что нельзя делать (жесты, касания, ноги, голова)", "text": "Заглушка: голова/ноги/касания/указания."},
-    "culture_taboos_clothes": {"title": "👕 Одежда, интим, общественные нормы", "text": "Заглушка: что считается нормой в публичных местах."},
+                "💡 Как вызывать уважение": {
+                    "_text": "Как вызывать уважение — выбери:",
+                    "_children": {
+                        "Вежливость — не слабость": {"_text": "Вежливость — не слабость.", "_children": {}},
+                        "Сохранять лицо даже в споре": {"_text": "Сохранять лицо — ключ.", "_children": {}},
+                        "Слушать, а не доказывать": {"_text": "Слушать, а не доказывать.", "_children": {}},
+                        "Простые фразы, которые помогают": {"_text": "Фразы: (позже добавим список).", "_children": {}},
+                    }
+                },
 
-    "culture_mistakes": {
-        "title": "😬 Типичные ошибки фарангов",
-        "children": [
-            "culture_mistakes_paid",
-            "culture_mistakes_agression_alcohol",
-            "culture_mistakes_girls_bars",
-            "culture_mistakes_illegal",
-        ],
-    },
-    "culture_mistakes_paid": {"title": "💸 “Я заплатил — значит, можно”", "text": "Заглушка: почему это часто ломает отношения и сервис."},
-    "culture_mistakes_agression_alcohol": {"title": "🍺 Агрессия и алкоголь", "text": "Заглушка: типовые сценарии проблем и как не попасть."},
-    "culture_mistakes_girls_bars": {"title": "🍸 Тайки, бары и чувство меры", "text": "Заглушка: осторожность, ожидания, деньги, границы."},
-    "culture_mistakes_illegal": {"title": "⚠️ Нелегальная работа, мотоциклы без прав", "text": "Заглушка: риски, штрафы, последствия."},
+                "🧘‍♂️ Сабай-сабай — философия спокойствия": {
+                    "_text": "Сабай-сабай — выбери:",
+                    "_children": {
+                        "Что значит “сабай” и “санук”": {"_text": "Сабай/санук — смысл.", "_children": {}},
+                        "Почему тайцы не спешат": {"_text": "Почему не спешат — культурно.", "_children": {}},
+                        "Как не бороться с хаосом, а жить в нём": {"_text": "Как жить в хаосе — практично.", "_children": {}},
+                        "Как сохранить внутренний баланс в чужой стране": {"_text": "Баланс — опоры и рутина.", "_children": {}},
+                    }
+                },
+            }
+        },
 
-    "culture_respect": {
-        "title": "💡 Как вызывать уважение",
-        "children": [
-            "culture_respect_polite",
-            "culture_respect_face",
-            "culture_respect_listen",
-            "culture_respect_phrases",
-        ],
-    },
-    "culture_respect_polite": {"title": "🤝 Вежливость — не слабость", "text": "Заглушка: почему мягкость даёт результат."},
-    "culture_respect_face": {"title": "😌 Сохранять лицо даже в споре", "text": "Заглушка: как спорить, не унижая собеседника."},
-    "culture_respect_listen": {"title": "👂 Слушать, а не доказывать", "text": "Заглушка: как получить “да” без давления."},
-    "culture_respect_phrases": {"title": "🗣️ Простые фразы, которые помогают (“коп кун кхрап”, “май пен рай”)", "text": "Заглушка: мини-набор фраз + когда их говорить."},
+        "🐾 Животные и переезд": {
+            "_text": "Животные и переезд — выбери раздел:",
+            "_children": {
+                "✈️ Ввоз питомца в Таиланд": {
+                    "_text": "Ввоз питомца в Таиланд — выбери тему:",
+                    "_children": {
+                        "Правила и документы": {"_text": "Правила и документы.", "_children": {}},
+                        "Разрешённые виды животных": {"_text": "Разрешённые виды животных.", "_children": {}},
+                        "Справки, микрочип и прививки": {"_text": "Справки/микрочип/прививки.", "_children": {}},
+                        "Полёт и авиаперевозка": {"_text": "Полёт/перевозка — варианты.", "_children": {}},
+                        "Таможня и получение в аэропорту": {"_text": "Таможня/получение в аэропорту.", "_children": {}},
+                    }
+                },
 
-    "culture_sabai": {
-        "title": "🧘 Сабай-сабай — философия спокойствия",
-        "children": [
-            "culture_sabai_meaning",
-            "culture_sabai_not_rush",
-            "culture_sabai_chaos",
-            "culture_sabai_balance",
-        ],
-    },
-    "culture_sabai_meaning": {"title": "🧩 Что значит “сабай” и “санук”", "text": "Заглушка: смысл слов и как это влияет на быт."},
-    "culture_sabai_not_rush": {"title": "🐢 Почему тайцы не спешат", "text": "Заглушка: другой ритм, другое отношение ко времени."},
-    "culture_sabai_chaos": {"title": "🌊 Как не бороться с хаосом, а жить в нём", "text": "Заглушка: адаптация, ожидания, гибкость."},
-    "culture_sabai_balance": {"title": "⚖️ Как сохранить внутренний баланс в чужой стране", "text": "Заглушка: психогигиена, режим, опоры."},
+                "📄 Документы и требования": {
+                    "_text": "Документы и требования — выбери тему:",
+                    "_children": {
+                        "Формы и сертификаты (Vet Health Certificate, Export Permit)": {
+                            "_text": "Формы и сертификаты — список и примеры.",
+                            "_children": {}
+                        },
+                        "Где получить разрешение в DLD (Department of Livestock Development)": {
+                            "_text": "DLD — куда идти и что делать.",
+                            "_children": {}
+                        },
+                        "Сроки действия справок": {"_text": "Сроки действия справок.", "_children": {}},
+                        "Примеры заполнения": {"_text": "Примеры заполнения.", "_children": {}},
+                    }
+                },
 
-    # =========================
-    # Экскурсии и гиды
-    # =========================
-    "excursions_guides": {
-        "title": "🌴 Экскурсии и гиды",
-        "children": [
-            "exc_daytrips",
-            "exc_sea",
-            "exc_private_guides",
-            "exc_unusual",
-        ],
-    },
+                "🏥 Ветеринария и уход": {
+                    "_text": "Ветеринария и уход — выбери:",
+                    "_children": {
+                        "Ветклиники и госпитали (Бангкок, Паттайя, Чиангмай)": {
+                            "_text": "Ветклиники/госпитали — список (позже наполним).",
+                            "_children": {}
+                        },
+                        "Вакцинация, анализы, чипирование": {"_text": "Вакцинация/анализы/чип.", "_children": {}},
+                        "Страховка для животных": {"_text": "Страховка для животных.", "_children": {}},
+                        "Груминг, передержка, передвижение по стране": {"_text": "Груминг/передержка/по стране.", "_children": {}},
+                        "Вакцины, которых требуют в Таиланде": {"_text": "Требуемые вакцины.", "_children": {}},
+                    }
+                },
 
-    "exc_daytrips": {
-        "title": "🚗 Однодневные поездки",
-        "children": [
-            "exc_daytrip_bkk",
-            "exc_daytrip_rayong",
-            "exc_daytrip_khaokheo",
-        ],
-    },
-    "exc_daytrip_bkk": {"title": "🏙️ Паттайя → Бангкок (Mahanakhon, храмы, шопинг)", "text": "Заглушка: маршрут/время/бюджет/советы."},
-    "exc_daytrip_rayong": {"title": "🌿 Паттайя → Районг (водопады, рынок фруктов)", "text": "Заглушка: куда заехать, что попробовать."},
-    "exc_daytrip_khaokheo": {"title": "🦒 Паттайя → Khao Kheo (зоопарк и горы)", "text": "Заглушка: лучший время, билеты, лайфхаки."},
+                "🌍 Вывоз из Таиланда": {
+                    "_text": "Вывоз из Таиланда — выбери:",
+                    "_children": {
+                        "Документы для вывоза в другие страны": {"_text": "Документы для вывоза.", "_children": {}},
+                        "Справки в DLD и сертификаты здоровья": {"_text": "DLD справки и сертификаты.", "_children": {}},
+                        "Перелёт и транспортные контейнеры": {"_text": "Контейнеры/переноски/перелёт.", "_children": {}},
+                        "Примеры маршрутов (в Россию, Европу, Латинскую Америку)": {"_text": "Маршруты — примеры.", "_children": {}},
+                    }
+                },
 
-    "exc_sea": {
-        "title": "🏝️ Морские туры",
-        "children": [
-            "exc_sea_kolan",
-            "exc_sea_kosamet",
-            "exc_sea_private_boat",
-        ],
-    },
-    "exc_sea_kolan": {"title": "🌊 Ко Лан — острова рядом с Паттайей", "text": "Заглушка: пляжи, как добраться, цены."},
-    "exc_sea_kosamet": {"title": "🏖️ Ко Самет — уединённый отдых", "text": "Заглушка: где жить, что делать, советы."},
-    "exc_sea_private_boat": {"title": "⛵ Частные лодки и рыбалка", "text": "Заглушка: аренда, безопасность, что уточнять."},
+                "🐈 Практические советы": {
+                    "_text": "Практические советы — выбери:",
+                    "_children": {
+                        "Как найти жильё с животным": {"_text": "Жильё с животным — как искать.", "_children": {}},
+                        "Как подготовить кота или собаку к полёту": {"_text": "Подготовка к полёту.", "_children": {}},
+                        "Что нельзя ввозить": {"_text": "Что нельзя ввозить.", "_children": {}},
+                        "Как снизить стресс у животного": {"_text": "Как снизить стресс.", "_children": {}},
+                        "Реальные истории переезда": {"_text": "Истории — добавим позже.", "_children": {}},
+                    }
+                },
+            }
+        },
 
-    "exc_private_guides": {
-        "title": "🧑‍💼 Гиды и частные туры",
-        "children": [
-            "exc_guides_ru",
-            "exc_guides_th",
-            "exc_guides_routes",
-            "exc_guides_photo_content",
-        ],
-    },
-    "exc_guides_ru": {"title": "🇷🇺 Русскоязычные гиды", "text": "Заглушка: как выбирать, вопросы перед бронированием."},
-    "exc_guides_th": {"title": "🇹🇭 Тайские гиды (англ/тай)", "text": "Заглушка: как договориться, что уточнять."},
-    "exc_guides_routes": {"title": "🗺️ Персональные маршруты", "text": "Заглушка: маршрут под тебя: интересы/время/бюджет."},
-    "exc_guides_photo_content": {"title": "📸 Контент для блогеров", "text": "Заглушка: локации/тайминг/свет/сценарий."},
+        "💼 Работа и налоги": {
+            "_text": "Работа и налоги — выбери тему:",
+            "_children": {
+                "Digital Nomad и удалёнка": {"_text": "Удалёнка/номад — что важно знать.", "_children": {}},
+                "Налоговое резидентство (180 дней и декларации)": {"_text": "Резидентство (180 дней, декларации).", "_children": {}},
+                "Крипта и фриланс в Таиланде": {"_text": "Крипта/фриланс — общие правила и риски.", "_children": {}},
+                "Как не попасть под нелегальную деятельность": {"_text": "Как не попасть под нелегал.", "_children": {}},
+                "Налоги, если живёшь долго": {"_text": "Налоги при долгом проживании.", "_children": {}},
+            }
+        },
 
-    "exc_unusual": {
-        "title": "✨ Необычные места",
-        "children": [
-            "exc_unusual_temples",
-            "exc_unusual_coffee",
-            "exc_unusual_night",
-        ],
-    },
-    "exc_unusual_temples": {"title": "🏯 Храмы вне туристических маршрутов", "text": "Заглушка: идеи и правила поведения."},
-    "exc_unusual_coffee": {"title": "☕ Кофейни с атмосферой", "text": "Заглушка: подборка формата."},
-    "exc_unusual_night": {"title": "🌙 Ночные рынки и деревни", "text": "Заглушка: что смотреть, безопасность."},
-
-    # =========================
-    # Фото и видео сопровождение (как на скрине — отдельным пунктом снизу)
-    # =========================
-    "photo_video": {
-        "title": "📷 Фото и видео сопровождение",
-        "children": [
-            "pv_photosession",
-            "pv_video_drone",
-            "pv_bloggers",
-        ],
-    },
-    "pv_photosession": {"title": "📸 Фотосессии на локациях", "text": "Заглушка: форматы, как подготовиться, что уточнить."},
-    "pv_video_drone": {"title": "🎥 Видео туры и дроны", "text": "Заглушка: что можно/нельзя, разрешения, безопасность."},
-    "pv_bloggers": {"title": "📣 Контент для блогеров", "text": "Заглушка: идеи, сценарии, локации."},
+        "🧰 Советы по быту и сервисы для дома": {
+            "_text": "Быт и сервисы — подборки (добавим позже).",
+            "_children": {}
+        },
+    }
 }
 
-
 # =========================
-# Вспомогательные функции
+# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 # =========================
+def get_node_by_path(path: List[str]) -> Dict[str, Any]:
+    node = MENU_TREE
+    for step in path:
+        node = node["_children"][step]
+    return node
 
-def node_title(node_id: str) -> str:
-    return NODES[node_id]["title"]
+def make_keyboard(node: Dict[str, Any], is_root: bool) -> ReplyKeyboardMarkup:
+    buttons = list(node.get("_children", {}).keys())
 
-def get_children(node_id: str) -> List[str]:
-    return NODES[node_id].get("children", [])
+    rows = []
+    for b in buttons:
+        rows.append([b])  # по 1 кнопке в строке (как на твоих скринах)
 
-def is_menu(node_id: str) -> bool:
-    return "children" in NODES[node_id]
-
-def get_text(node_id: str) -> str:
-    return NODES[node_id].get("text", "Раздел в разработке.")
-
-def build_keyboard(node_id: str) -> ReplyKeyboardMarkup:
-    """
-    Строит клавиатуру для текущего меню.
-    Автоматически добавляет Назад и Главное меню.
-    """
-    children = get_children(node_id)
-
-    # Кнопки детей: по 1 в строке (как у тебя на скринах-структуре)
-    rows = [[node_title(ch)] for ch in children]
-
-    # Навигация
+    # навигация
     nav_row = []
-    if node_id != "root":
+    if not is_root:
         nav_row.append(BTN_BACK)
         nav_row.append(BTN_HOME)
-    if nav_row:
         rows.append(nav_row)
 
     return ReplyKeyboardMarkup(rows, resize_keyboard=True)
 
-def find_node_by_title(current_menu_id: str, title: str) -> Optional[str]:
-    """
-    Ищет дочерний узел по названию кнопки (title) внутри текущего меню.
-    """
-    for ch in get_children(current_menu_id):
-        if node_title(ch) == title:
-            return ch
-    return None
+async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    path: List[str] = context.user_data.get("path", [])
+    node = get_node_by_path(path) if path else MENU_TREE
 
-def get_path(context: ContextTypes.DEFAULT_TYPE) -> List[str]:
-    """
-    Путь меню: список node_id, например ["root", "culture", "culture_taboos"]
-    """
-    path = context.user_data.get("path")
-    if not path:
-        path = ["root"]
-        context.user_data["path"] = path
-    return path
+    text = node.get("_text", "Выбери пункт из меню 👇")
+    kb = make_keyboard(node, is_root=(len(path) == 0))
 
+    await update.message.reply_text(text, reply_markup=kb)
 
 # =========================
-# Хендлеры
+# ХЭНДЛЕРЫ
 # =========================
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    context.user_data["path"] = []
+    await show_menu(update, context)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data["path"] = ["root"]
-    kb = build_keyboard("root")
-    await update.message.reply_text(
-        f"Привет 👋 Я {BOT_NAME}!\nВыбери нужный раздел ⤵️",
-        reply_markup=kb
-    )
+async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    txt = (update.message.text or "").strip()
+    path: List[str] = context.user_data.get("path", [])
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = (update.message.text or "").strip()
-    path = get_path(context)
-    current_menu = path[-1]
-
-    # --- Навигация ---
-    if text == BTN_HOME:
-        context.user_data["path"] = ["root"]
-        kb = build_keyboard("root")
-        await update.message.reply_text("Главное меню:", reply_markup=kb)
+    # HOME
+    if txt == BTN_HOME:
+        context.user_data["path"] = []
+        await show_menu(update, context)
         return
 
-    if text == BTN_BACK:
-        if len(path) > 1:
+    # BACK
+    if txt == BTN_BACK:
+        if path:
             path.pop()
-        current_menu = path[-1]
-        kb = build_keyboard(current_menu)
-        await update.message.reply_text("Назад:", reply_markup=kb)
+        context.user_data["path"] = path
+        await show_menu(update, context)
         return
 
-    # --- Переход по дереву ---
-    # 1) Пытаемся найти выбранную кнопку среди детей текущего меню
-    target = find_node_by_title(current_menu, text)
+    # переход по дереву
+    node = get_node_by_path(path) if path else MENU_TREE
+    children = node.get("_children", {})
 
-    if target is None:
-        # Нажали не то / написали руками
-        kb = build_keyboard(current_menu)
-        await update.message.reply_text("Выбери пункт из меню ⤵️", reply_markup=kb)
+    if txt in children:
+        path.append(txt)
+        context.user_data["path"] = path
+        await show_menu(update, context)
         return
 
-    # 2) Если это меню — открываем его
-    if is_menu(target):
-        path.append(target)
-        kb = build_keyboard(target)
-        await update.message.reply_text(node_title(target), reply_markup=kb)
-        return
+    # если текст не кнопка
+    await update.message.reply_text("Выбери пункт кнопкой 👇")
 
-    # 3) Если это лист — показываем текст (и оставляем клаву текущего меню)
-    kb = build_keyboard(current_menu)
-    await update.message.reply_text(get_text(target), reply_markup=kb)
-
-
-def main():
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
+def main() -> None:
+    token = os.getenv("BOT_TOKEN", "").strip()
     if not token:
-        print("❌ Ошибка: не найден TELEGRAM_BOT_TOKEN")
-        return
+        raise RuntimeError("Не найден BOT_TOKEN в переменных окружения")
 
-    app = ApplicationBuilder().token(token).build()
+    app = Application.builder().token(token).build()
 
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
-    print("✅ Bot is running...")
-    app.run_polling()
-
+    # ВАЖНО: запускай либо polling, либо webhook (НЕ ВМЕСТЕ).
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
     main()
