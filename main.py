@@ -136,11 +136,9 @@ MENU_TREE: Dict[str, Any] = {
             "_text": "Поведение и культура — что важно знать в Таиланде.",
             "_children": {
                "{ } Прежде чем ты начнёшь": {
-                   "_text": load_content(
-                       content_path("behavior/before_you_start.md")
-               ),
-               "_children": {}
-               },
+                   "_text": load_content(content_path("behavior/before_you_start.md")),
+                   "_children": {}
+            },
 
                 "🙏 Тайская культура и табу": {
                     "_text": "Тайская культура и табу — выбери тему:",
