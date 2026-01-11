@@ -7,12 +7,20 @@ main_menu = [
     ["🏠 Аренда", "🪪 Визы"],
     ["💱 Обмен валюты", "📸 Фото и видео"],
     ["🌴 Туры и экскурсии", "🏥 Страховки"]
+    ["⚠️ Поведение и культура"]
 ]
 
 # Подменю аренды
 rental_menu = [
     ["🏢 Кондо", "🏡 Дома"],
     ["🚗 Автомобили", "🛵 Мотоциклы и байки"],
+    ["⬅️ Назад в меню"]
+]
+# Подменю "Поведение и культура"
+culture_menu = [
+    ["🧩 Прежде чем ты начнёшь", "🙏 Тайская культура и табу"],
+    ["🙂 Типичные ошибки фарангов", "💡 Как вызывать уважение"],
+    ["🧘 Сабай-сабай — философия спокойствия"],
     ["⬅️ Назад в меню"]
 ]
 
@@ -47,6 +55,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif text == "🏥 Страховки":
         await update.message.reply_text("🩺 Поможем с медицинской страховкой для виз и путешествий.")
+    
+    elif text == "⚠️ Поведение и культура":
+    reply_markup = ReplyKeyboardMarkup(culture_menu, resize_keyboard=True)
+    await update.message.reply_text("Выбери тему:", reply_markup=reply_markup)
 
     # --- Подменю аренды ---
     elif text == "🏢 Кондо":
@@ -60,6 +72,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif text == "🛵 Мотоциклы и байки":
         await update.message.reply_text("🛵 Есть байки на день, неделю или месяц. Укажи модель или объём двигателя.")
+    
+    # --- Подменю "Поведение и культура" ---
+    elif text == "🧩 Прежде чем ты начнёшь":
+        await update.message.reply_text("Заглушка: сюда позже добавим текст/статью по теме «Прежде чем ты начнёшь».")
+
+    elif text == "🙏 Тайская культура и табу":
+        await update.message.reply_text("Заглушка: сюда позже добавим правила/табу/поведение в храме и т.д.")
+
+    elif text == "🙂 Типичные ошибки фарангов":
+        await update.message.reply_text("Заглушка: сюда позже добавим типичные ошибки (агрессия, «я заплатил», и т.п.).")
+
+    elif text == "💡 Как вызывать уважение":
+        await update.message.reply_text("Заглушка: сюда позже добавим принципы общения и уважения.")
+
+    elif text == "🧘 Сабай-сабай — философия спокойствия":
+        await update.message.reply_text("Заглушка: сюда позже добавим объяснение «сабай-сабай» и как жить проще.")
 
     elif text == "⬅️ Назад в меню":
         reply_markup = ReplyKeyboardMarkup(main_menu, resize_keyboard=True)
