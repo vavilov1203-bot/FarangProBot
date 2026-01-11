@@ -1,104 +1,136 @@
 import os
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-# Главное меню
+
+# ===== КНОПКИ (тексты должны совпадать 1-в-1) =====
+BTN_RENT = "🏠 Аренда"
+BTN_VISAS = "🧾 Визы"
+BTN_EXCHANGE = "💱 Обмен валют"
+BTN_PHOTO = "📸 Фото и видео"
+BTN_TOURS = "🌴 Туры и экскурсии"
+BTN_INSURANCE = "🛡️ Страховки"
+BTN_CULTURE = "⚠️ Поведение и культура"
+
+BTN_BACK_MAIN = "⬅️ Назад в меню"
+
+
+# ===== ГЛАВНОЕ МЕНЮ =====
 main_menu = [
-    ["🏠 Аренда", "🪪 Визы"],
-    ["💱 Обмен валюты", "📸 Фото и видео"],
-    ["🌴 Туры и экскурсии", "🏥 Страховки"]
-    ["⚠️ Поведение и культура"]
+    [BTN_RENT, BTN_VISAS],
+    [BTN_EXCHANGE, BTN_PHOTO],
+    [BTN_TOURS, BTN_INSURANCE],
+    [BTN_CULTURE],
 ]
 
-# Подменю аренды
+# ===== ПОДМЕНЮ: АРЕНДА =====
 rental_menu = [
     ["🏢 Кондо", "🏡 Дома"],
     ["🚗 Автомобили", "🛵 Мотоциклы и байки"],
-    ["⬅️ Назад в меню"]
+    [BTN_BACK_MAIN],
 ]
-# Подменю "Поведение и культура"
+
+# ===== ПОДМЕНЮ: ПОВЕДЕНИЕ И КУЛЬТУРА =====
 culture_menu = [
-    ["🧩 Прежде чем ты начнёшь", "🙏 Тайская культура и табу"],
+    ["🧠 Прежде чем ты начнёшь", "🙏 Тайская культура и табу"],
     ["🙂 Типичные ошибки фарангов", "💡 Как вызывать уважение"],
-    ["🧘 Сабай-сабай — философия спокойствия"],
-    ["⬅️ Назад в меню"]
+    ["🧘‍♂️ Сабай-сабай — философия спокойствия"],
+    [BTN_BACK_MAIN],
 ]
+
+
+def kb(layout):
+    return ReplyKeyboardMarkup(layout, resize_keyboard=True)
+
+
+async def send_main_menu(update: Update, text: str = "Главное меню:"):
+    await update.message.reply_text(text, reply_markup=kb(main_menu))
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    reply_markup = ReplyKeyboardMarkup(main_menu, resize_keyboard=True)
     await update.message.reply_text(
-        "Привет 👋 Я FarangProBot! Помогу с жизнью в Таиланде 🇹🇭\nВыбери нужный раздел:",
-        reply_markup=reply_markup
+        "Привет 👋 Я FarangProBot!\nВыбери нужный раздел:",
+        reply_markup=kb(main_menu),
     )
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
+    text = (update.message.text or "").strip()
+
+    # --- Назад в главное меню ---
+    if text == BTN_BACK_MAIN:
+        await send_main_menu(update)
+        return
 
     # --- Главное меню ---
-    if text == "🏠 Аренда":
-        reply_markup = ReplyKeyboardMarkup(rental_menu, resize_keyboard=True)
-        await update.message.reply_text("Выбери категорию аренды:", reply_markup=reply_markup)
+    if text == BTN_RENT:
+        await update.message.reply_text("Выбери категорию аренды:", reply_markup=kb(rental_menu))
+        return
 
-    elif text == "🪪 Визы":
-        await update.message.reply_text("📄 Доступны визы: ED, DTV, Семейная, Бизнес, Пенсионная, Элит и продления штампов.")
+    if text == BTN_VISAS:
+        await update.message.reply_text("🧾 Доступны визы: ED, DTV, Семейная, Бизнес, Пенсионная, Элит и продления штампов.")
+        return
 
-    elif text == "💱 Обмен валюты":
-        await update.message.reply_text("💰 Курсы валют обновляются ежедневно. Напиши, какую валюту хочешь обменять.")
+    if text == BTN_EXCHANGE:
+        await update.message.reply_text("💱 Курсы валют обновляются ежедневно. Напиши, какую валюту хочешь обменять.")
+        return
 
-    elif text == "📸 Фото и видео":
-        await update.message.reply_text("📷 Фото- и видеосъёмка мероприятий, недвижимости и бизнеса. Напиши задачу!")
+    if text == BTN_PHOTO:
+        await update.message.reply_text("📸 Фото- и видеосъёмка мероприятий, недвижимости и бизнеса. Напиши задачу!")
+        return
 
-    elif text == "🌴 Туры и экскурсии":
-        await update.message.reply_text("🏖️ Экскурсии по Таиланду: острова, сафари, шоу, храмы — всё под ключ.")
+    if text == BTN_TOURS:
+        await update.message.reply_text("🌴 Экскурсии по Таиланду: острова, сафари, шоу, храмы — всё под ключ.")
+        return
 
-    elif text == "🏥 Страховки":
-        await update.message.reply_text("🩺 Поможем с медицинской страховкой для виз и путешествий.")
-    
-    elif text == "⚠️ Поведение и культура":
-        reply_markup = ReplyKeyboardMarkup(culture_menu, resize_keyboard=True)
-        await update.message.reply_text(
-            "Выбери тему 👇",
-            reply_markup=reply_markup
-    )
+    if text == BTN_INSURANCE:
+        await update.message.reply_text("🛡️ Поможем с медицинской страховкой для виз и путешествий.")
+        return
 
-    # --- Подменю аренды ---
-    elif text == "🏢 Кондо":
+    if text == BTN_CULTURE:
+        await update.message.reply_text("Выбери тему 👇", reply_markup=kb(culture_menu))
+        return
+
+    # --- Подменю “Аренда” (пока заглушки) ---
+    if text == "🏢 Кондо":
         await update.message.reply_text("📍 Подбор кондо по району, бюджету и сроку аренды. Напиши параметры!")
+        return
 
-    elif text == "🏡 Дома":
-        await update.message.reply_text("🏡 Найдём дом с садом, бассейном или у моря. Укажи, что ищешь.")
+    if text == "🏡 Дома":
+        await update.message.reply_text("🏡 Найдём дом с садом/бассейном/у моря. Напиши параметры!")
+        return
 
-    elif text == "🚗 Автомобили":
-        await update.message.reply_text("🚘 Аренда авто с автоматом/механикой, долгосрочно и краткосрочно.")
+    if text == "🚗 Автомобили":
+        await update.message.reply_text("🚗 Аренда авто: автомат/механика, краткосрок/долгосрок. Напиши запрос.")
+        return
 
-    elif text == "🛵 Мотоциклы и байки":
-        await update.message.reply_text("🛵 Есть байки на день, неделю или месяц. Укажи модель или объём двигателя.")
-    
-    # --- Подменю "Поведение и культура" ---
-    elif text == "🧩 Прежде чем ты начнёшь":
-        await update.message.reply_text("Заглушка: сюда позже добавим текст/статью по теме «Прежде чем ты начнёшь».")
+    if text == "🛵 Мотоциклы и байки":
+        await update.message.reply_text("🛵 Байки на день/неделю/месяц. Напиши модель или объём двигателя.")
+        return
 
-    elif text == "🙏 Тайская культура и табу":
-        await update.message.reply_text("Заглушка: сюда позже добавим правила/табу/поведение в храме и т.д.")
+    # --- Подменю “Поведение и культура” (заглушки) ---
+    if text == "🧠 Прежде чем ты начнёшь":
+        await update.message.reply_text("Заглушка: позже добавим статью «Прежде чем ты начнёшь».")
+        return
 
-    elif text == "🙂 Типичные ошибки фарангов":
-        await update.message.reply_text("Заглушка: сюда позже добавим типичные ошибки (агрессия, «я заплатил», и т.п.).")
+    if text == "🙏 Тайская культура и табу":
+        await update.message.reply_text("Заглушка: позже добавим правила/табу/поведение в храме и т.д.")
+        return
 
-    elif text == "💡 Как вызывать уважение":
-        await update.message.reply_text("Заглушка: сюда позже добавим принципы общения и уважения.")
+    if text == "🙂 Типичные ошибки фарангов":
+        await update.message.reply_text("Заглушка: позже добавим типичные ошибки (агрессия, «я заплатил», и т.д.).")
+        return
 
-    elif text == "🧘 Сабай-сабай — философия спокойствия":
-        await update.message.reply_text("Заглушка: сюда позже добавим объяснение «сабай-сабай» и как жить проще.")
+    if text == "💡 Как вызывать уважение":
+        await update.message.reply_text("Заглушка: позже добавим принципы общения и уважения.")
+        return
 
-    elif text == "⬅️ Назад в меню":
-        reply_markup = ReplyKeyboardMarkup(main_menu, resize_keyboard=True)
-        await update.message.reply_text("Главное меню:", reply_markup=reply_markup)
+    if text == "🧘‍♂️ Сабай-сабай — философия спокойствия":
+        await update.message.reply_text("Заглушка: позже добавим объяснение «сабай-сабай» и как жить проще.")
+        return
 
-    # --- Остальное ---
-    else:
-        await update.message.reply_text("Выбери пункт из меню 👇")
+    # --- Если ввели что-то не из меню ---
+    await update.message.reply_text("Выбери пункт из меню 👇", reply_markup=kb(main_menu))
 
 
 def main():
