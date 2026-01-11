@@ -57,10 +57,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("🩺 Поможем с медицинской страховкой для виз и путешествий.")
     
     elif text == "⚠️ Поведение и культура":
-    reply_markup = ReplyKeyboardMarkup(culture_menu, resize_keyboard=True)
-    await update.message.reply_text(
-        "Выбери раздел 👇",
-        reply_markup=reply_markup
+        reply_markup = ReplyKeyboardMarkup(culture_menu, resize_keyboard=True)
+        await update.message.reply_text(
+            "Выбери тему 👇",
+            reply_markup=reply_markup
+    )
     )
 
     # --- Подменю аренды ---
