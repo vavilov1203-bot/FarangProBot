@@ -5,7 +5,16 @@ from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import (
     Application, CommandHandler, MessageHandler, ContextTypes, filters
 )
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+def content_path(relative_path: str) -> str:
+    return os.path.join(BASE_DIR, "content", relative_path)
+def load_content(path: str) -> str:
+    try:
+        with open(path, "r", encoding="utf-8") as file:
+            return file.read()
+    except FileNotFoundError:
+        return "Контент пока не добавлен."
 # =========================
 # НАСТРОЙКИ КНОПОК
 # =========================
@@ -126,14 +135,12 @@ MENU_TREE: Dict[str, Any] = {
         "⚠️ Поведение и культура": {
             "_text": "Поведение и культура — что важно знать в Таиланде.",
             "_children": {
-                "{ } Прежде чем ты начнёшь": {
-                    "_text": "Прежде чем ты начнёшь — базовые принципы:",
-                    "_children": {
-                        "Никто не ждёт — но и не мешает": {"_text": "Никто не ждёт — но и не мешает.", "_children": {}},
-                        "Уважение как валюта": {"_text": "Уважение как валюта.", "_children": {}},
-                        "Почему “улыбка” не значит “друг”": {"_text": "Почему улыбка не значит дружба.", "_children": {}},
-                    }
-                },
+               "{ } Прежде чем ты начнёшь": {
+                   "_text": load_content(
+                       content_path("behavior/before_you_start.md")
+               ),
+               "_children": {}
+               },
 
                 "🙏 Тайская культура и табу": {
                     "_text": "Тайская культура и табу — выбери тему:",
