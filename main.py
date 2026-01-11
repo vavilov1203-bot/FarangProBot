@@ -62,7 +62,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Выбери тему 👇",
             reply_markup=reply_markup
     )
-    )
 
     # --- Подменю аренды ---
     elif text == "🏢 Кондо":
