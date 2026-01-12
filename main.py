@@ -309,8 +309,12 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     text = node.get("_text", "Выбери пункт из меню 👇")
     kb = make_keyboard(node, is_root=(len(path) == 0))
 
-    await update.message.reply_text(text, reply_markup=kb)
-
+    await update.message.reply_text(
+    text,
+    reply_markup=kb,
+    parse_mode=None,
+    disable_web_page_preview=True
+)
 # =========================
 # ХЭНДЛЕРЫ
 # =========================
