@@ -160,7 +160,7 @@ MENU_TREE: Dict[str, Any] = {
                     },
                 }
             },
-                            "🙂 Типичные ошибки фарангов": {
+                    "🙂 Типичные ошибки фарангов": {
                 "_text": load_content(content_path("mistakes/intro.md")),
                 "_children": {
                     "💸 Я заплатил — значит, можно": {
