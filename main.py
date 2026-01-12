@@ -160,15 +160,27 @@ MENU_TREE: Dict[str, Any] = {
                     },
                 }
             },
-                "🙂 Типичные ошибки фарангов": {
-                    "_text": "Типичные ошибки фарангов — выбери:",
-                    "_children": {
-                        "“Я заплатил — значит, можно”": {"_text": "Почему это не работает.", "_children": {}},
-                        "Агрессия и алкоголь": {"_text": "Агрессия и алкоголь — последствия.", "_children": {}},
-                        "Тайки, бары и чувство меры": {"_text": "Тайки/бары — здравый смысл.", "_children": {}},
-                        "Нелегальная работа, мотоциклы без прав": {"_text": "Нелегальная работа/байк без прав — риски.", "_children": {}},
+                            "🙂 Типичные ошибки фарангов": {
+                "_text": load_content(content_path("mistakes/intro.md")),
+                "_children": {
+                    "💸 Я заплатил — значит, можно": {
+                        "_text": load_content(content_path("mistakes/i_paid_so_i_can.md")),
+                        "_children": {}
+                    },
+                    "😡 Агрессия и алкоголь": {
+                        "_text": load_content(content_path("mistakes/aggression_alcohol.md")),
+                        "_children": {}
+                    },
+                    "🍻 Тайки, бары и чувство меры": {
+                        "_text": load_content(content_path("mistakes/bars_and_boundaries.md")),
+                        "_children": {}
+                    },
+                    "🏍 Нелегальная работа, мотоциклы без прав": {
+                        "_text": load_content(content_path("mistakes/illegal_work_and_bike.md")),
+                        "_children": {}
                     }
-                },
+                }
+            },
 
                 "💡 Как вызывать уважение": {
                     "_text": "Как вызывать уважение — выбери:",
