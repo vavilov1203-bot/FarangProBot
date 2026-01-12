@@ -182,27 +182,27 @@ MENU_TREE: Dict[str, Any] = {
                 }
             },
 
-                           "💡 Как вызывать уважение": {
-                "_text": load_content(content_path("respect/intro.md")),
-                "_children": {
-                    "Вежливость — не слабость": {
-                        "_text": load_content(content_path("respect/politeness_not_weakness.md")),
-                        "_children": {}
-                    },
-                    "Сохранять лицо даже в споре": {
-                        "_text": load_content(content_path("respect/save_face_in_conflict.md")),
-                        "_children": {}
-                    },
-                    "Слушать, а не доказывать": {
-                        "_text": load_content(content_path("respect/listen_dont_prove.md")),
-                        "_children": {}
-                    },
-                    "Простые фразы, которые помогают": {
-                        "_text": load_content(content_path("respect/helpful_phrases.md")),
-                        "_children": {}
-                    },
-                }
-            },
+                         "💡 Как вызывать уважение": {
+                    "_text": load_content(content_path("respect/intro.md")),
+                    "_children": {
+                        "Вежливость — не слабость": {
+                            "_text": load_content(content_path("respect/politeness_not_weakness.md")),
+                            "_children": {}
+                        },
+                        "Сохранять лицо даже в споре": {
+                            "_text": load_content(content_path("respect/save_face_in_conflict.md")),
+                            "_children": {}
+                        },
+                        "Слушать, а не доказывать": {
+                            "_text": load_content(content_path("respect/listen_dont_prove.md")),
+                            "_children": {}
+                        },
+                        "Простые фразы, которые помогают": {
+                            "_text": load_content(content_path("respect/helpful_phrases.md")),
+                            "_children": {}
+                        },
+                    }
+                },
 
                 "🧘‍♂️ Сабай-сабай — философия спокойствия": {
                     "_text": "Сабай-сабай — выбери:",
