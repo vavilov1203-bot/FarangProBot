@@ -139,17 +139,27 @@ MENU_TREE: Dict[str, Any] = {
                    "_text": load_content(content_path("behavior/before_you_start.md")),
                    "_children": {}
             },
-
-                "🙏 Тайская культура и табу": {
-                    "_text": "Тайская культура и табу — выбери тему:",
-                    "_children": {
-                        "Король, религия, и “святые” темы": {"_text": "Король/религия — что нельзя.", "_children": {}},
-                        "Как вести себя в храме": {"_text": "Храм — одежда/поведение.", "_children": {}},
-                        "Что нельзя делать (жесты, касания, ноги, голова)": {"_text": "Жесты/касания/ноги/голова — табу.", "_children": {}},
-                        "Одежда, интим, общественные нормы": {"_text": "Одежда/интим/нормы — как не облажаться.", "_children": {}},
-                    }
-                },
-
+                    "🙏 Тайская культура и табу": {
+                "_text": load_content(content_path("taboo/intro.md")),
+                "_children": {
+                    "👑 Король, религия и «святые» темы": {
+                        "_text": load_content(content_path("taboo/king_religion.md")),
+                        "_children": {}
+                    },
+                    "⛩️ Как вести себя в храме": {
+                        "_text": load_content(content_path("taboo/temple_rules.md")),
+                        "_children": {}
+                    },
+                    "👣 Голова, ноги, касания": {
+                        "_text": load_content(content_path("taboo/head_feet_touch.md")),
+                        "_children": {}
+                    },
+                    "👕 Одежда и нормы": {
+                        "_text": load_content(content_path("taboo/clothes_public_norms.md")),
+                        "_children": {}
+                    },
+                }
+            },
                 "🙂 Типичные ошибки фарангов": {
                     "_text": "Типичные ошибки фарангов — выбери:",
                     "_children": {
