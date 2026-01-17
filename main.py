@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import (
@@ -28,15 +28,23 @@ BTN_BACK = "⬅️ Назад"
 BTN_HOME = "🏠 Главное меню"
 
 # =========================
-# УДОБНОЕ ОТКЛЮЧЕНИЕ РАЗДЕЛОВ
+# УДОБНОЕ ОТКЛЮЧЕНИЕ РАЗДЕЛОВ (V1)
 # =========================
-# 1) Можно отключить любой узел меню так:
-# "📸 Фото и видео": { "_disabled": True, "_text": "...", "_children": {...} }
+# V1: оставляем только базовые рабочие разделы:
+# ✅ 🧭 Моя ситуация / С чего начать
+# ✅ 📄 Визы
+# ✅ 🛡️ Страховки
+# ✅ ⚠️ Поведение и культура
+# ✅ 🧰 Советы по быту и сервисы (как заглушка/хаб)
 #
-# 2) Или отключать разделы корня по названию кнопки:
-DISABLED_ROOT_BUTTONS = set([
-    # "📸 Фото и видео",
-])
+# Остальное прячем, чтобы бот уже работал.
+DISABLED_ROOT_BUTTONS = {
+    "🏠 Аренда",
+    "💱 Обмен валют",
+    "📸 Фото и видео",
+    "🌴 Туры и экскурсии",
+    "💼 Работа и налоги",
+}
 
 # =========================
 # ДЕРЕВО МЕНЮ (СТРУКТУРА)
@@ -201,7 +209,7 @@ MENU_TREE: Dict[str, Any] = {
         },
 
         # =========================
-        # ДАЛЬШЕ — ТВОИ РАЗДЕЛЫ (КАК БЫЛО)
+        # Остальные разделы (оставляем в коде — можно включить позже)
         # =========================
 
         "🏠 Аренда": {
@@ -248,21 +256,8 @@ MENU_TREE: Dict[str, Any] = {
             "_text": "Экскурсии по Таиланду: острова, сафари, шоу, храмы — всё под ключ.",
             "_children": {
                 "🚗 Однодневные поездки": {
-                    "_text": "Однодневные поездки — выбери маршрут:",
-                    "_children": {
-                        "Паттайя → Бангкок (Mahanakhon, храмы, шопинг)": {
-                            "_text": "Маршрут Паттайя → Бангкок (Mahanakhon, храмы, шопинг).",
-                            "_children": {},
-                        },
-                        "Паттайя → Районг (водопады, рынок фруктов)": {
-                            "_text": "Маршрут Паттайя → Районг (водопады, рынок фруктов).",
-                            "_children": {},
-                        },
-                        "Паттайя → Кхао Кхео (зоопарк и горы)": {
-                            "_text": "Маршрут Паттайя → Кхао Кхео (зоопарк и горы).",
-                            "_children": {},
-                        },
-                    },
+                    "_text": "Однодневные поездки — выбери маршрут hookup? (заглушка)",
+                    "_children": {},
                 },
             },
         },
@@ -349,16 +344,6 @@ MENU_TREE: Dict[str, Any] = {
                         },
                     },
                 },
-
-                "🧘‍♂️ Сабай-сабай — философия спокойствия": {
-                    "_text": "Сабай-сабай — выбери:",
-                    "_children": {
-                        "Что значит “сабай” и “санук”": {"_text": "Сабай/санук — смысл.", "_children": {}},
-                        "Почему тайцы не спешат": {"_text": "Почему не спешат — культурно.", "_children": {}},
-                        "Как не бороться с хаосом, а жить в нём": {"_text": "Как жить в хаосе — практично.", "_children": {}},
-                        "Как сохранить внутренний баланс в чужой стране": {"_text": "Баланс — опоры и рутина.", "_children": {}},
-                    },
-                },
             },
         },
 
@@ -366,10 +351,7 @@ MENU_TREE: Dict[str, Any] = {
             "_text": "Работа и налоги — выбери тему:",
             "_children": {
                 "Digital Nomad и удалёнка": {"_text": "Удалёнка/номад — что важно знать.", "_children": {}},
-                "Налоговое резидентство (180 дней и декларации)": {
-                    "_text": "Резидентство (180 дней, декларации).",
-                    "_children": {}
-                },
+                "Налоговое резидентство (180 дней и декларации)": {"_text": "Резидентство (180 дней, декларации).", "_children": {}},
                 "Крипта и фриланс в Таиланде": {"_text": "Крипта/фриланс — общие правила и риски.", "_children": {}},
                 "Как не попасть под нелегальную деятельность": {"_text": "Как не попасть под нелегал.", "_children": {}},
                 "Налоги, если живёшь долго": {"_text": "Налоги при долгом проживании.", "_children": {}},
@@ -377,12 +359,11 @@ MENU_TREE: Dict[str, Any] = {
         },
 
         "🧰 Советы по быту и сервисы": {
-            "_text": "Быт и сервисы — подборки (добавим позже).",
+            "_text": "Быт и сервисы — базовый хаб. Здесь позже будут подборки и ссылки.",
             "_children": {},
         },
     },
 }
-
 
 # =========================
 # СЛУЖЕБНО: ФИЛЬТР ОТКЛЮЧЕННЫХ УЗЛОВ
@@ -416,18 +397,14 @@ def prune_disabled(node: Dict[str, Any], is_root: bool = False) -> Dict[str, Any
 # Применяем фильтрацию один раз при старте
 MENU_TREE = prune_disabled(MENU_TREE, is_root=True)
 
-
 # =========================
 # ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 # =========================
-def get_node_by_path(path: List[str]) -> Optional[Dict[str, Any]]:
+def get_node_by_path(path: List[str]) -> Dict[str, Any]:
     node = MENU_TREE
-    try:
-        for step in path:
-            node = node["_children"][step]
-        return node
-    except Exception:
-        return None
+    for step in path:
+        node = node["_children"][step]
+    return node
 
 
 def make_keyboard(node: Dict[str, Any], is_root: bool) -> ReplyKeyboardMarkup:
@@ -448,13 +425,8 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     path: List[str] = context.user_data.get("path", [])
     node = get_node_by_path(path) if path else MENU_TREE
 
-    # если путь сломался — возвращаем в корень
-    if not node:
-        context.user_data["path"] = []
-        node = MENU_TREE
-
     text = node.get("_text", "Выбери пункт из меню 👇")
-    kb = make_keyboard(node, is_root=(len(context.user_data.get("path", [])) == 0))
+    kb = make_keyboard(node, is_root=(len(path) == 0))
 
     await update.message.reply_text(
         text,
@@ -490,13 +462,8 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await show_menu(update, context)
         return
 
-    # текущий узел
+    # переход по дереву
     node = get_node_by_path(path) if path else MENU_TREE
-    if not node:
-        context.user_data["path"] = []
-        await show_menu(update, context)
-        return
-
     children = node.get("_children", {})
 
     if txt in children:
