@@ -59,12 +59,10 @@ MENU_TREE: Dict[str, Any] = {
                 "🧳 Я только приехал": {
                     "_text": load_content(content_path("situations/just_arrived.md")),
                     "_children": {
-                        # ✅ ДОБАВЛЕНО: Таиланд — не рай (единственное изменение)
                         "⚠️ Таиланд — не рай. Прочитай в первый день": {
                             "_text": load_content(content_path("situations/thailand_not_paradise.md")),
                             "_children": {},
                         },
-
                         "💱 Обмен денег — как сделать правильно": {
                             "_text": load_content(content_path("situations/just_arrived_exchange.md")),
                             "_children": {
@@ -105,9 +103,10 @@ MENU_TREE: Dict[str, Any] = {
                 },
 
                 # -------------------------
-                # 👨‍👩‍👦 Я с семьёй / ребёнок
+                # 👨‍👩‍👦 Я с семьёй / ребёнок  (СКРЫТО ДЛЯ ПОЛЬЗОВАТЕЛЕЙ)
                 # -------------------------
                 "👨‍👩‍👦 Я с семьёй / ребёнок": {
+                    "_disabled": True,
                     "_text": load_content(content_path("situations/with_family.md")),
                     "_children": {
                         "🏠 Жильё для семьи — как выбирать": {
@@ -251,11 +250,6 @@ MENU_TREE: Dict[str, Any] = {
         "⚠️ Поведение и культура": {
             "_text": "Поведение и культура — что важно знать в Таиланде.",
             "_children": {
-                "{ } Прежде чем ты начнёшь": {
-                    "_text": load_content(content_path("behavior/before_you_start.md")),
-                    "_children": {},
-                },
-
                 "🙏 Тайская культура и табу": {
                     "_text": load_content(content_path("taboo/intro.md")),
                     "_children": {
