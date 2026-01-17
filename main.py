@@ -5,16 +5,22 @@ from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import (
     Application, CommandHandler, MessageHandler, ContextTypes, filters
 )
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 def content_path(relative_path: str) -> str:
     return os.path.join(BASE_DIR, "content", relative_path)
+
+
 def load_content(path: str) -> str:
     try:
         with open(path, "r", encoding="utf-8") as file:
             return file.read()
     except FileNotFoundError:
         return "Контент пока не добавлен."
+
+
 # =========================
 # НАСТРОЙКИ КНОПОК
 # =========================
@@ -29,63 +35,60 @@ BTN_HOME = "🏠 Главное меню"
 #   "_text": "Текст, который бот пишет при входе в раздел" (опционально),
 #   "_children": { "Кнопка": { ...подраздел... }, ... }
 # }
+#
+# Доп. формат "ссылки":
+# { "_goto": ["Путь", "до", "узла"] }
+# (путь — это список названий кнопок, начиная от корня)
 MENU_TREE: Dict[str, Any] = {
     "_text": "Выбери пункт из меню 👇",
     "_children": {
+        # =========================
+        # 🧭 МОЯ СИТУАЦИЯ
+        # =========================
         "🧭 Моя ситуация / С чего начать": {
-    "_text": (
-        "Здесь нет теории и лишнего.\n\n"
-        "Выбери ситуацию — и я проведу тебя по нужным шагам, "
-        "используя уже готовые разделы бота 👇"
-    ),
-    "_children": {
-
-        "🧳 Я только приехал": {
             "_text": (
-                "Если ты недавно в Таиланде, начни с этого порядка:\n\n"
-                "1️⃣ Обмен денег\n"
-                "2️⃣ Быт и сервисы\n"
-                "3️⃣ Жильё\n"
-                "4️⃣ Визовый статус\n"
-                "5️⃣ Поведение и культура\n\n"
-                "Нажимай нужный пункт 👇"
+                "Здесь нет теории и лишнего.\n\n"
+                "Выбери ситуацию — и я проведу тебя по нужным шагам, "
+                "используя уже готовые разделы бота 👇"
             ),
             "_children": {
+                "🧳 Я только приехал": {
+                    "_text": (
+                        "Если ты недавно в Таиланде, начни с этого порядка:\n\n"
+                        "1️⃣ Обмен денег\n"
+                        "2️⃣ Быт и сервисы\n"
+                        "3️⃣ Жильё\n"
+                        "4️⃣ Визовый статус\n"
+                        "5️⃣ Поведение и культура\n\n"
+                        "Нажимай нужный пункт 👇"
+                    ),
+                    "_children": {
+                        "💱 Обмен валют": {"_goto": ["💱 Обмен валют"]},
+                        "🧰 Советы по быту и сервисы": {"_goto": ["🧰 Советы по быту и сервисы"]},
+                        "🏠 Аренда": {"_goto": ["🏠 Аренда"]},
+                        "📄 Визы": {"_goto": ["📄 Визы"]},
+                        "⚠️ Поведение и культура": {"_goto": ["⚠️ Поведение и культура"]},
+                    },
+                }
+            },
+        },
 
-                "💱 Обмен валют": {
-                    "_goto": ["💱 Обмен валют"]
-                },
-
-                "🧰 Советы по быту и сервисы": {
-                    "_goto": ["🧰 Советы по быту и сервисы"]
-                },
-
-                "🏠 Аренда": {
-                    "_goto": ["🏠 Аренда"]
-                },
-
-                "📄 Визы": {
-                    "_goto": ["📄 Визы"]
-                },
-
-                "⚠️ Поведение и культура": {
-                    "_goto": ["⚠️ Поведение и культура"]
-                },
-            }
-        }
-    }
-},
+        # =========================
+        # 🏠 АРЕНДА
+        # =========================
         "🏠 Аренда": {
             "_text": "Выбери категорию аренды:",
             "_children": {
-                # ПРИМЕРЫ — можешь заменить на свои
                 "Квартиры/Кондо": {"_text": "Квартиры/Кондо — сюда добавим гайды и чек-листы.", "_children": {}},
                 "Дома": {"_text": "Дома — сюда добавим гайды и чек-листы.", "_children": {}},
                 "Договор и депозит": {"_text": "Договор и депозит — важные нюансы.", "_children": {}},
-            }
+            },
         },
 
-        "🧾 Визы": {
+        # =========================
+        # 📄 ВИЗЫ (переименовано под единый стиль)
+        # =========================
+        "📄 Визы": {
             "_text": "Доступные визы: ED, DTV, Семейная, Бизнес, Пенсионная, Элит и продления штампов.",
             "_children": {
                 "ED (учебная)": {"_text": "ED-виза — структура раздела (позже наполним).", "_children": {}},
@@ -95,27 +98,36 @@ MENU_TREE: Dict[str, Any] = {
                 "Пенсионная": {"_text": "Пенсионная — требования и продления.", "_children": {}},
                 "Элит": {"_text": "Elite — пакеты, цены, нюансы.", "_children": {}},
                 "Продление штампов": {"_text": "Продления — сроки, штрафы, лайфхаки.", "_children": {}},
-            }
+            },
         },
 
+        # =========================
+        # 💱 ОБМЕН ВАЛЮТ
+        # =========================
         "💱 Обмен валют": {
             "_text": "Обмен валют — курсы, где менять, безопасность.",
             "_children": {
                 "Где выгоднее менять": {"_text": "Где выгоднее — банки/обменники/приложения.", "_children": {}},
                 "Безопасность": {"_text": "Как не попасть на подмену/фейки.", "_children": {}},
                 "Крипта": {"_text": "Крипта — легальность и риски (общая инфа).", "_children": {}},
-            }
+            },
         },
 
+        # =========================
+        # 📸 ФОТО/ВИДЕО
+        # =========================
         "📸 Фото и видео": {
             "_text": "Фото и видео — услуги, цены, где искать.",
             "_children": {
                 "📷 Фотосессии на локациях": {"_text": "Фотосессии — подбор локаций/стиля/цены.", "_children": {}},
                 "🎥 Видео туры и дроны": {"_text": "Видео/дроны — условия, разрешения, цены.", "_children": {}},
                 "📣 Контент для блогеров": {"_text": "Контент-пакеты для блогеров.", "_children": {}},
-            }
+            },
         },
 
+        # =========================
+        # 🌴 ТУРЫ
+        # =========================
         "🌴 Туры и экскурсии": {
             "_text": "Экскурсии по Таиланду: острова, сафари, шоу, храмы — всё под ключ.",
             "_children": {
@@ -124,127 +136,132 @@ MENU_TREE: Dict[str, Any] = {
                     "_children": {
                         "Паттайя → Бангкок (Mahanakhon, храмы, шопинг)": {
                             "_text": "Маршрут Паттайя → Бангкок (Mahanakhon, храмы, шопинг).",
-                            "_children": {}
+                            "_children": {},
                         },
                         "Паттайя → Районг (водопады, рынок фруктов)": {
                             "_text": "Маршрут Паттайя → Районг (водопады, рынок фруктов).",
-                            "_children": {}
+                            "_children": {},
                         },
                         "Паттайя → Кхао Кхео (зоопарк и горы)": {
                             "_text": "Маршрут Паттайя → Кхао Кхео (зоопарк и горы).",
-                            "_children": {}
+                            "_children": {},
                         },
-                    }
+                    },
                 },
-
                 "🏝 Морские туры": {
                     "_text": "Морские туры — выбери:",
                     "_children": {
                         "Ко Лан — острова рядом с Паттайей": {"_text": "Ко Лан — детали тура/цены/советы.", "_children": {}},
                         "Ко Самет — уединённый отдых": {"_text": "Ко Самет — детали тура/цены/советы.", "_children": {}},
                         "Частные лодки и рыбалка": {"_text": "Частные лодки/рыбалка — форматы и цены.", "_children": {}},
-                    }
+                    },
                 },
-
                 "🧑‍💼 Гиды и частные туры": {
                     "_text": "Гиды и частные туры — выбери:",
                     "_children": {
                         "Русскоязычные гиды": {"_text": "Русскоязычные гиды — где искать и как выбирать.", "_children": {}},
                         "Тайские гиды (англ / тай)": {"_text": "Тайские гиды — где искать и как выбирать.", "_children": {}},
                         "Персональные маршруты": {"_text": "Персональные маршруты — сбор ТЗ и планирование.", "_children": {}},
-                    }
+                    },
                 },
-
                 "✨ Необычные места": {
                     "_text": "Необычные места — выбери:",
                     "_children": {
                         "Храмы вне туристических маршрутов": {"_text": "Нетуристические храмы — подборки.", "_children": {}},
                         "Кофейни с атмосферой": {"_text": "Кофейни — подборки и районы.", "_children": {}},
                         "Ночные рынки и деревни": {"_text": "Ночные рынки/деревни — куда ехать.", "_children": {}},
-                    }
+                    },
                 },
-            }
+            },
         },
 
+        # =========================
+        # 🛡 СТРАХОВКИ
+        # =========================
         "🛡️ Страховки": {
             "_text": "Страховки — здоровье, путешествия, авто/байк, имущество.",
             "_children": {
                 "Медицинская": {"_text": "Медицинская страховка — как выбрать.", "_children": {}},
                 "Путешествия": {"_text": "Travel страховка — нюансы.", "_children": {}},
                 "Авто/байк": {"_text": "Авто/байк страховка — что покрывает.", "_children": {}},
-            }
+            },
         },
 
+        # =========================
+        # ⚠️ ПОВЕДЕНИЕ И КУЛЬТУРА
+        # =========================
         "⚠️ Поведение и культура": {
             "_text": "Поведение и культура — что важно знать в Таиланде.",
             "_children": {
-               "{ } Прежде чем ты начнёшь": {
-                   "_text": load_content(content_path("behavior/before_you_start.md")),
-                   "_children": {}
-            },
-                    "🙏 Тайская культура и табу": {
-                "_text": load_content(content_path("taboo/intro.md")),
-                "_children": {
-                    "👑 Король, религия и «святые» темы": {
-                        "_text": load_content(content_path("taboo/king_religion.md")),
-                        "_children": {}
-                    },
-                    "⛩️ Как вести себя в храме": {
-                        "_text": load_content(content_path("taboo/temple_rules.md")),
-                        "_children": {}
-                    },
-                    "👣 Голова, ноги, касания": {
-                        "_text": load_content(content_path("taboo/head_feet_touch.md")),
-                        "_children": {}
-                    },
-                    "👕 Одежда и нормы": {
-                        "_text": load_content(content_path("taboo/clothes_public_norms.md")),
-                        "_children": {}
-                    },
-                }
-            },
-                    "🙂 Типичные ошибки фарангов": {
-                "_text": load_content(content_path("mistakes/intro.md")),
-                "_children": {
-                    "💸 Я заплатил — значит, можно": {
-                        "_text": load_content(content_path("mistakes/i_paid_so_i_can.md")),
-                        "_children": {}
-                    },
-                    "😡 Агрессия и алкоголь": {
-                        "_text": load_content(content_path("mistakes/aggression_alcohol.md")),
-                        "_children": {}
-                    },
-                    "🍻 Тайки, бары и чувство меры": {
-                        "_text": load_content(content_path("mistakes/bars_and_boundaries.md")),
-                        "_children": {}
-                    },
-                    "🏍 Нелегальная работа, мотоциклы без прав": {
-                        "_text": load_content(content_path("mistakes/illegal_work_and_bike.md")),
-                        "_children": {}
-                    }
-                }
-            },
+                "{ } Прежде чем ты начнёшь": {
+                    "_text": load_content(content_path("behavior/before_you_start.md")),
+                    "_children": {},
+                },
 
-                         "💡 Как вызывать уважение": {
+                "🙏 Тайская культура и табу": {
+                    "_text": load_content(content_path("taboo/intro.md")),
+                    "_children": {
+                        "👑 Король, религия и «святые» темы": {
+                            "_text": load_content(content_path("taboo/king_religion.md")),
+                            "_children": {},
+                        },
+                        "⛩️ Как вести себя в храме": {
+                            "_text": load_content(content_path("taboo/temple_rules.md")),
+                            "_children": {},
+                        },
+                        "👣 Голова, ноги, касания": {
+                            "_text": load_content(content_path("taboo/head_feet_touch.md")),
+                            "_children": {},
+                        },
+                        "👕 Одежда и нормы": {
+                            "_text": load_content(content_path("taboo/clothes_public_norms.md")),
+                            "_children": {},
+                        },
+                    },
+                },
+
+                "🙂 Типичные ошибки фарангов": {
+                    "_text": load_content(content_path("mistakes/intro.md")),
+                    "_children": {
+                        "💸 Я заплатил — значит, можно": {
+                            "_text": load_content(content_path("mistakes/i_paid_so_i_can.md")),
+                            "_children": {},
+                        },
+                        "😡 Агрессия и алкоголь": {
+                            "_text": load_content(content_path("mistakes/aggression_alcohol.md")),
+                            "_children": {},
+                        },
+                        "🍻 Тайки, бары и чувство меры": {
+                            "_text": load_content(content_path("mistakes/bars_and_boundaries.md")),
+                            "_children": {},
+                        },
+                        "🏍 Нелегальная работа, мотоциклы без прав": {
+                            "_text": load_content(content_path("mistakes/illegal_work_and_bike.md")),
+                            "_children": {},
+                        },
+                    },
+                },
+
+                "💡 Как вызывать уважение": {
                     "_text": load_content(content_path("respect/intro.md")),
                     "_children": {
                         "Вежливость — не слабость": {
                             "_text": load_content(content_path("respect/politeness_not_weakness.md")),
-                            "_children": {}
+                            "_children": {},
                         },
                         "Сохранять лицо даже в споре": {
                             "_text": load_content(content_path("respect/save_face_in_conflict.md")),
-                            "_children": {}
+                            "_children": {},
                         },
                         "Слушать, а не доказывать": {
                             "_text": load_content(content_path("respect/listen_dont_prove.md")),
-                            "_children": {}
+                            "_children": {},
                         },
                         "Простые фразы, которые помогают": {
                             "_text": load_content(content_path("respect/helpful_phrases.md")),
-                            "_children": {}
+                            "_children": {},
                         },
-                    }
+                    },
                 },
 
                 "🧘‍♂️ Сабай-сабай — философия спокойствия": {
@@ -254,11 +271,14 @@ MENU_TREE: Dict[str, Any] = {
                         "Почему тайцы не спешат": {"_text": "Почему не спешат — культурно.", "_children": {}},
                         "Как не бороться с хаосом, а жить в нём": {"_text": "Как жить в хаосе — практично.", "_children": {}},
                         "Как сохранить внутренний баланс в чужой стране": {"_text": "Баланс — опоры и рутина.", "_children": {}},
-                    }
+                    },
                 },
-            }
+            },
         },
 
+        # =========================
+        # 🐾 ЖИВОТНЫЕ
+        # =========================
         "🐾 Животные и переезд": {
             "_text": "Животные и переезд — выбери раздел:",
             "_children": {
@@ -270,39 +290,36 @@ MENU_TREE: Dict[str, Any] = {
                         "Справки, микрочип и прививки": {"_text": "Справки/микрочип/прививки.", "_children": {}},
                         "Полёт и авиаперевозка": {"_text": "Полёт/перевозка — варианты.", "_children": {}},
                         "Таможня и получение в аэропорту": {"_text": "Таможня/получение в аэропорту.", "_children": {}},
-                    }
+                    },
                 },
-
                 "📄 Документы и требования": {
                     "_text": "Документы и требования — выбери тему:",
                     "_children": {
                         "Формы и сертификаты (Vet Health Certificate, Export Permit)": {
                             "_text": "Формы и сертификаты — список и примеры.",
-                            "_children": {}
+                            "_children": {},
                         },
                         "Где получить разрешение в DLD (Department of Livestock Development)": {
                             "_text": "DLD — куда идти и что делать.",
-                            "_children": {}
+                            "_children": {},
                         },
                         "Сроки действия справок": {"_text": "Сроки действия справок.", "_children": {}},
                         "Примеры заполнения": {"_text": "Примеры заполнения.", "_children": {}},
-                    }
+                    },
                 },
-
                 "🏥 Ветеринария и уход": {
                     "_text": "Ветеринария и уход — выбери:",
                     "_children": {
                         "Ветклиники и госпитали (Бангкок, Паттайя, Чиангмай)": {
                             "_text": "Ветклиники/госпитали — список (позже наполним).",
-                            "_children": {}
+                            "_children": {},
                         },
                         "Вакцинация, анализы, чипирование": {"_text": "Вакцинация/анализы/чип.", "_children": {}},
                         "Страховка для животных": {"_text": "Страховка для животных.", "_children": {}},
                         "Груминг, передержка, передвижение по стране": {"_text": "Груминг/передержка/по стране.", "_children": {}},
                         "Вакцины, которых требуют в Таиланде": {"_text": "Требуемые вакцины.", "_children": {}},
-                    }
+                    },
                 },
-
                 "🌍 Вывоз из Таиланда": {
                     "_text": "Вывоз из Таиланда — выбери:",
                     "_children": {
@@ -310,9 +327,8 @@ MENU_TREE: Dict[str, Any] = {
                         "Справки в DLD и сертификаты здоровья": {"_text": "DLD справки и сертификаты.", "_children": {}},
                         "Перелёт и транспортные контейнеры": {"_text": "Контейнеры/переноски/перелёт.", "_children": {}},
                         "Примеры маршрутов (в Россию, Европу, Латинскую Америку)": {"_text": "Маршруты — примеры.", "_children": {}},
-                    }
+                    },
                 },
-
                 "🐈 Практические советы": {
                     "_text": "Практические советы — выбери:",
                     "_children": {
@@ -321,11 +337,14 @@ MENU_TREE: Dict[str, Any] = {
                         "Что нельзя ввозить": {"_text": "Что нельзя ввозить.", "_children": {}},
                         "Как снизить стресс у животного": {"_text": "Как снизить стресс.", "_children": {}},
                         "Реальные истории переезда": {"_text": "Истории — добавим позже.", "_children": {}},
-                    }
+                    },
                 },
-            }
+            },
         },
 
+        # =========================
+        # 💼 РАБОТА И НАЛОГИ
+        # =========================
         "💼 Работа и налоги": {
             "_text": "Работа и налоги — выбери тему:",
             "_children": {
@@ -334,15 +353,19 @@ MENU_TREE: Dict[str, Any] = {
                 "Крипта и фриланс в Таиланде": {"_text": "Крипта/фриланс — общие правила и риски.", "_children": {}},
                 "Как не попасть под нелегальную деятельность": {"_text": "Как не попасть под нелегал.", "_children": {}},
                 "Налоги, если живёшь долго": {"_text": "Налоги при долгом проживании.", "_children": {}},
-            }
+            },
         },
 
-        "🧰 Советы по быту и сервисы для дома": {
+        # =========================
+        # 🧰 БЫТ (переименовано под единый стиль)
+        # =========================
+        "🧰 Советы по быту и сервисы": {
             "_text": "Быт и сервисы — подборки (добавим позже).",
-            "_children": {}
+            "_children": {},
         },
-    }
+    },
 }
+
 
 # =========================
 # ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -353,21 +376,20 @@ def get_node_by_path(path: List[str]) -> Dict[str, Any]:
         node = node["_children"][step]
     return node
 
+
 def make_keyboard(node: Dict[str, Any], is_root: bool) -> ReplyKeyboardMarkup:
     buttons = list(node.get("_children", {}).keys())
 
     rows = []
     for b in buttons:
-        rows.append([b])  # по 1 кнопке в строке (как на твоих скринах)
+        rows.append([b])  # по 1 кнопке в строке
 
     # навигация
-    nav_row = []
     if not is_root:
-        nav_row.append(BTN_BACK)
-        nav_row.append(BTN_HOME)
-        rows.append(nav_row)
+        rows.append([BTN_BACK, BTN_HOME])
 
     return ReplyKeyboardMarkup(rows, resize_keyboard=True)
+
 
 async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     path: List[str] = context.user_data.get("path", [])
@@ -377,17 +399,20 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     kb = make_keyboard(node, is_root=(len(path) == 0))
 
     await update.message.reply_text(
-    text,
-    reply_markup=kb,
-    parse_mode=None,
-    disable_web_page_preview=True
-)
+        text,
+        reply_markup=kb,
+        parse_mode=None,
+        disable_web_page_preview=True
+    )
+
+
 # =========================
 # ХЭНДЛЕРЫ
 # =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data["path"] = []
     await show_menu(update, context)
+
 
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     txt = (update.message.text or "").strip()
@@ -412,13 +437,21 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     children = node.get("_children", {})
 
     if txt in children:
-        path.append(txt)
-        context.user_data["path"] = path
+        next_node = children[txt]
+
+        # ✅ поддержка "_goto"
+        if isinstance(next_node, dict) and "_goto" in next_node:
+            context.user_data["path"] = list(next_node["_goto"])
+        else:
+            path.append(txt)
+            context.user_data["path"] = path
+
         await show_menu(update, context)
         return
 
     # если текст не кнопка
     await update.message.reply_text("Выбери пункт кнопкой 👇")
+
 
 def main() -> None:
     token = os.getenv("BOT_TOKEN", "").strip()
@@ -432,6 +465,7 @@ def main() -> None:
 
     # ВАЖНО: запускай либо polling, либо webhook (НЕ ВМЕСТЕ).
     app.run_polling(allowed_updates=Update.ALL_TYPES)
+
 
 if __name__ == "__main__":
     main()
