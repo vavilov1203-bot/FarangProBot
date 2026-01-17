@@ -59,6 +59,12 @@ MENU_TREE: Dict[str, Any] = {
                 "🧳 Я только приехал": {
                     "_text": load_content(content_path("situations/just_arrived.md")),
                     "_children": {
+                        # ✅ НОВАЯ КНОПКА (вступление от тебя)
+                        "⚠️ Таиланд — не рай. Прочитай в первый день": {
+                            "_text": load_content(content_path("situations/just_arrived_reality.md")),
+                            "_children": {},
+                        },
+
                         "💱 Обмен денег — как сделать правильно": {
                             "_text": load_content(content_path("situations/just_arrived_exchange.md")),
                             "_children": {
