@@ -314,39 +314,39 @@ MENU_TREE: Dict[str, Any] = {
         # ==========================================================
         # ✅ 5) 🧰 СОВЕТЫ ПО БЫТУ И СЕРВИСЫ (ДОБАВИЛ ПОДРАЗДЕЛЫ)
         # ==========================================================
-        "🧰 Советы по быту и сервисы": {
-            "_text": "Бытовой хаб. Выбирай раздел ниже 👇",
+               "🧰 Советы по быту и сервисы": {
+            "_text": load_content(content_path("services/intro.md")),
             "_children": {
                 "📱 Связь, SIM, интернет": {
-                    "_text": "Заглушка: где брать SIM/eSIM, какие операторы, пакеты, проверка скорости.",
+                    "_text": load_content(content_path("services/sim_internet.md")),
                     "_children": {},
                 },
                 "🚕 Такси и транспорт": {
-                    "_text": "Заглушка: приложения такси, аэропорт, байки, автобусы, как не переплатить.",
+                    "_text": load_content(content_path("services/taxi_transport.md")),
                     "_children": {},
                 },
                 "🍜 Доставка еды": {
-                    "_text": "Заглушка: приложения доставки, как заказывать, чаевые, частые ошибки.",
+                    "_text": load_content(content_path("services/food_delivery.md")),
                     "_children": {},
                 },
                 "💳 Оплата, карты, кошельки": {
-                    "_text": "Заглушка: наличка/карта/QR, какие карты проходят, комиссии, безопасность.",
+                    "_text": load_content(content_path("services/payments_cards_qr.md")),
                     "_children": {},
                 },
                 "🛒 Магазины и закупки": {
-                    "_text": "Заглушка: 7/11, супермаркеты, рынки, доставка продуктов.",
+                    "_text": load_content(content_path("services/shops_groceries.md")),
                     "_children": {},
                 },
                 "🏠 Быт в квартире": {
-                    "_text": "Заглушка: вода/электричество, кондиционер, стирка, бытовая техника.",
+                    "_text": load_content(content_path("services/home_life.md")),
                     "_children": {},
                 },
                 "📦 Доставки и посылки": {
-                    "_text": "Заглушка: локальные курьеры, отправка посылок, пункты выдачи.",
+                    "_text": load_content(content_path("services/delivery_packages.md")),
                     "_children": {},
                 },
                 "🩺 Аптеки и базовая помощь": {
-                    "_text": "Заглушка: что купить в аптеке, как объяснить симптомы, что иметь дома.",
+                    "_text": load_content(content_path("services/pharmacy_first_aid.md")),
                     "_children": {},
                 },
             },
