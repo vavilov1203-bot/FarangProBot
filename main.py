@@ -39,6 +39,9 @@ BTN_HOME = "🏠 Главное меню"
 # Доп. формат "ссылки":
 # { "_goto": ["Путь", "до", "узла"] }
 # (путь — это список названий кнопок, начиная от корня)
+#
+# Доп. флаг отключения:
+# "_enabled": False  -> кнопка не показывается и вход запрещён
 MENU_TREE: Dict[str, Any] = {
     "_text": "Выбери пункт из меню 👇",
     "_children": {
@@ -86,7 +89,7 @@ MENU_TREE: Dict[str, Any] = {
         },
 
         # =========================
-        # 📄 ВИЗЫ (переименовано под единый стиль)
+        # 📄 ВИЗЫ
         # =========================
         "📄 Визы": {
             "_text": "Доступные визы: ED, DTV, Семейная, Бизнес, Пенсионная, Элит и продления штампов.",
@@ -117,6 +120,7 @@ MENU_TREE: Dict[str, Any] = {
         # 📸 ФОТО/ВИДЕО
         # =========================
         "📸 Фото и видео": {
+            # "_enabled": False,  # включи, если хочешь скрыть раздел
             "_text": "Фото и видео — услуги, цены, где искать.",
             "_children": {
                 "📷 Фотосессии на локациях": {"_text": "Фотосессии — подбор локаций/стиля/цены.", "_children": {}},
@@ -129,6 +133,7 @@ MENU_TREE: Dict[str, Any] = {
         # 🌴 ТУРЫ
         # =========================
         "🌴 Туры и экскурсии": {
+            # "_enabled": False,  # включи, если хочешь скрыть раздел
             "_text": "Экскурсии по Таиланду: острова, сафари, шоу, храмы — всё под ключ.",
             "_children": {
                 "🚗 Однодневные поездки": {
@@ -346,6 +351,7 @@ MENU_TREE: Dict[str, Any] = {
         # 💼 РАБОТА И НАЛОГИ
         # =========================
         "💼 Работа и налоги": {
+            # "_enabled": False,  # включи, если хочешь скрыть раздел
             "_text": "Работа и налоги — выбери тему:",
             "_children": {
                 "Digital Nomad и удалёнка": {"_text": "Удалёнка/номад — что важно знать.", "_children": {}},
@@ -357,7 +363,7 @@ MENU_TREE: Dict[str, Any] = {
         },
 
         # =========================
-        # 🧰 БЫТ (переименовано под единый стиль)
+        # 🧰 БЫТ
         # =========================
         "🧰 Советы по быту и сервисы": {
             "_text": "Быт и сервисы — подборки (добавим позже).",
@@ -378,7 +384,13 @@ def get_node_by_path(path: List[str]) -> Dict[str, Any]:
 
 
 def make_keyboard(node: Dict[str, Any], is_root: bool) -> ReplyKeyboardMarkup:
-    buttons = list(node.get("_children", {}).keys())
+    children = node.get("_children", {})
+
+    # ✅ показываем только включённые пункты (если _enabled нет — считаем True)
+    buttons = [
+        k for k, v in children.items()
+        if isinstance(v, dict) and v.get("_enabled", True)
+    ]
 
     rows = []
     for b in buttons:
@@ -436,11 +448,12 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     node = get_node_by_path(path) if path else MENU_TREE
     children = node.get("_children", {})
 
-    if txt in children:
+    # ✅ не даём входить в выключенные пункты
+    if txt in children and isinstance(children[txt], dict) and children[txt].get("_enabled", True):
         next_node = children[txt]
 
         # ✅ поддержка "_goto"
-        if isinstance(next_node, dict) and "_goto" in next_node:
+        if "_goto" in next_node:
             context.user_data["path"] = list(next_node["_goto"])
         else:
             path.append(txt)
@@ -449,7 +462,6 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await show_menu(update, context)
         return
 
-    # если текст не кнопка
     await update.message.reply_text("Выбери пункт кнопкой 👇")
 
 
@@ -463,7 +475,6 @@ def main() -> None:
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
-    # ВАЖНО: запускай либо polling, либо webhook (НЕ ВМЕСТЕ).
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
