@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import (
@@ -30,6 +30,10 @@ BTN_HOME = "🏠 Главное меню"
 # =========================
 # УДОБНОЕ ОТКЛЮЧЕНИЕ РАЗДЕЛОВ
 # =========================
+# 1) Можно отключить любой узел меню так:
+# "📸 Фото и видео": { "_disabled": True, "_text": "...", "_children": {...} }
+#
+# 2) Или отключать разделы корня по названию кнопки:
 DISABLED_ROOT_BUTTONS = set([
     # "📸 Фото и видео",
 ])
@@ -63,7 +67,9 @@ MENU_TREE: Dict[str, Any] = {
                         "🧰 Быт и сервисы — что поставить в первый день": {
                             "_text": load_content(content_path("situations/just_arrived_services.md")),
                             "_children": {
-                                "➡️ Открыть основной раздел: 🧰 Советы по быту и сервисы": {"_goto": ["🧰 Советы по быту и сервисы"]},
+                                "➡️ Открыть основной раздел: 🧰 Советы по быту и сервисы": {
+                                    "_goto": ["🧰 Советы по быту и сервисы"]
+                                },
                             },
                         },
                         "📄 Визовый статус — как понять, что у тебя сейчас": {
@@ -81,7 +87,9 @@ MENU_TREE: Dict[str, Any] = {
                         "⚠️ Культура — что нельзя делать точно": {
                             "_text": load_content(content_path("situations/just_arrived_culture.md")),
                             "_children": {
-                                "➡️ Открыть основной раздел: ⚠️ Поведение и культура": {"_goto": ["⚠️ Поведение и культура"]},
+                                "➡️ Открыть основной раздел: ⚠️ Поведение и культура": {
+                                    "_goto": ["⚠️ Поведение и культура"]
+                                },
                             },
                         },
                     },
@@ -114,13 +122,17 @@ MENU_TREE: Dict[str, Any] = {
                         "🧰 Быт с ребёнком — сервисы и быстрая адаптация": {
                             "_text": load_content(content_path("situations/family_services.md")),
                             "_children": {
-                                "➡️ Открыть основной раздел: 🧰 Советы по быту и сервисы": {"_goto": ["🧰 Советы по быту и сервисы"]},
+                                "➡️ Открыть основной раздел: 🧰 Советы по быту и сервисы": {
+                                    "_goto": ["🧰 Советы по быту и сервисы"]
+                                },
                             },
                         },
                         "⚠️ Культура — чтобы не было проблем у семьи": {
                             "_text": load_content(content_path("situations/family_culture.md")),
                             "_children": {
-                                "➡️ Открыть основной раздел: ⚠️ Поведение и культура": {"_goto": ["⚠️ Поведение и культура"]},
+                                "➡️ Открыть основной раздел: ⚠️ Поведение и культура": {
+                                    "_goto": ["⚠️ Поведение и культура"]
+                                },
                             },
                         },
                     },
@@ -148,7 +160,9 @@ MENU_TREE: Dict[str, Any] = {
                             "_text": load_content(content_path("situations/cheap_red_flags.md")),
                             "_children": {
                                 "➡️ Открыть основной раздел: 💼 Работа и налоги": {"_goto": ["💼 Работа и налоги"]},
-                                "➡️ Открыть основной раздел: ⚠️ Поведение и культура": {"_goto": ["⚠️ Поведение и культура"]},
+                                "➡️ Открыть основной раздел: ⚠️ Поведение и культура": {
+                                    "_goto": ["⚠️ Поведение и культура"]
+                                },
                             },
                         },
                     },
@@ -176,7 +190,9 @@ MENU_TREE: Dict[str, Any] = {
                             "_text": load_content(content_path("situations/med_no_insurance.md")),
                             "_children": {
                                 "➡️ Открыть основной раздел: 🛡️ Страховки": {"_goto": ["🛡️ Страховки"]},
-                                "➡️ Открыть основной раздел: 🧰 Советы по быту и сервисы": {"_goto": ["🧰 Советы по быту и сервисы"]},
+                                "➡️ Открыть основной раздел: 🧰 Советы по быту и сервисы": {
+                                    "_goto": ["🧰 Советы по быту и сервисы"]
+                                },
                             },
                         },
                     },
@@ -185,7 +201,7 @@ MENU_TREE: Dict[str, Any] = {
         },
 
         # =========================
-        # ДАЛЬШЕ — ТВОИ РАЗДЕЛЫ БЕЗ ИЗМЕНЕНИЙ
+        # ДАЛЬШЕ — ТВОИ РАЗДЕЛЫ (КАК БЫЛО)
         # =========================
 
         "🏠 Аренда": {
@@ -350,7 +366,10 @@ MENU_TREE: Dict[str, Any] = {
             "_text": "Работа и налоги — выбери тему:",
             "_children": {
                 "Digital Nomad и удалёнка": {"_text": "Удалёнка/номад — что важно знать.", "_children": {}},
-                "Налоговое резидентство (180 дней и декларации)": {"_text": "Резидентство (180 дней, декларации).", "_children": {}},
+                "Налоговое резидентство (180 дней и декларации)": {
+                    "_text": "Резидентство (180 дней, декларации).",
+                    "_children": {}
+                },
                 "Крипта и фриланс в Таиланде": {"_text": "Крипта/фриланс — общие правила и риски.", "_children": {}},
                 "Как не попасть под нелегальную деятельность": {"_text": "Как не попасть под нелегал.", "_children": {}},
                 "Налоги, если живёшь долго": {"_text": "Налоги при долгом проживании.", "_children": {}},
@@ -401,11 +420,14 @@ MENU_TREE = prune_disabled(MENU_TREE, is_root=True)
 # =========================
 # ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 # =========================
-def get_node_by_path(path: List[str]) -> Dict[str, Any]:
+def get_node_by_path(path: List[str]) -> Optional[Dict[str, Any]]:
     node = MENU_TREE
-    for step in path:
-        node = node["_children"][step]
-    return node
+    try:
+        for step in path:
+            node = node["_children"][step]
+        return node
+    except Exception:
+        return None
 
 
 def make_keyboard(node: Dict[str, Any], is_root: bool) -> ReplyKeyboardMarkup:
@@ -426,8 +448,13 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     path: List[str] = context.user_data.get("path", [])
     node = get_node_by_path(path) if path else MENU_TREE
 
+    # если путь сломался — возвращаем в корень
+    if not node:
+        context.user_data["path"] = []
+        node = MENU_TREE
+
     text = node.get("_text", "Выбери пункт из меню 👇")
-    kb = make_keyboard(node, is_root=(len(path) == 0))
+    kb = make_keyboard(node, is_root=(len(context.user_data.get("path", [])) == 0))
 
     await update.message.reply_text(
         text,
@@ -463,8 +490,13 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await show_menu(update, context)
         return
 
-    # переход по дереву
+    # текущий узел
     node = get_node_by_path(path) if path else MENU_TREE
+    if not node:
+        context.user_data["path"] = []
+        await show_menu(update, context)
+        return
+
     children = node.get("_children", {})
 
     if txt in children:
