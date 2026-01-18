@@ -199,11 +199,32 @@ MENU_TREE: Dict[str, Any] = {
                 # ✅ “ОСНОВНОЙ РАЗДЕЛ” ОБМЕНА — ВНУТРИ МОЕЙ СИТУАЦИИ (НЕ ROOT!)
                 # ----------------------------------------------------------
                 "💱 Обмен валют": {
-                    "_text": "Обмен валют — курсы, где менять, безопасность.",
+                    "_text": load_content(content_path("exchange/intro.md")),
                     "_children": {
-                        "Где выгоднее менять": {"_text": "Где выгоднее — банки/обменники/приложения.", "_children": {}},
-                        "Безопасность": {"_text": "Как не попасть на подмену/фейки.", "_children": {}},
-                        "Крипта": {"_text": "Крипта — легальность и риски (общая инфа).", "_children": {}},
+                        "Где выгоднее менять": {
+                            "_text": load_content(content_path("exchange/where_best.md")),
+                            "_children": {
+                                "Банки vs обменники": {"_text": load_content(content_path("exchange/banks_vs_exchangers.md")), "_children": {}},
+                                "Курс, комиссии, спред": {"_text": load_content(content_path("exchange/rates_fees_spread.md")), "_children": {}},
+                                "Как сравнивать курсы быстро": {"_text": load_content(content_path("exchange/how_to_compare.md")), "_children": {}},
+                            },
+                        },
+                        "Безопасность": {
+                            "_text": load_content(content_path("exchange/safety.md")),
+                            "_children": {
+                                "Подмена купюр / фейки": {"_text": load_content(content_path("exchange/fake_notes.md")), "_children": {}},
+                                "Как выбирать обменник": {"_text": load_content(content_path("exchange/how_choose_exchange.md")), "_children": {}},
+                                "Большие суммы": {"_text": load_content(content_path("exchange/large_amounts.md")), "_children": {}},
+                            },
+                        },
+                        "Крипта": {
+                            "_text": load_content(content_path("exchange/crypto_intro.md")),
+                            "_children": {
+                                "P2P: базовые правила": {"_text": load_content(content_path("exchange/p2p_rules.md")), "_children": {}},
+                                "Риски блокировок": {"_text": load_content(content_path("exchange/blocks_risks.md")), "_children": {}},
+                                "Что говорить/не говорить банку": {"_text": load_content(content_path("exchange/bank_questions.md")), "_children": {}},
+                            },
+                        },
                     },
                 },
             },
@@ -213,15 +234,81 @@ MENU_TREE: Dict[str, Any] = {
         # ✅ 2) 📄 ВИЗЫ
         # ==========================================================
         "📄 Визы": {
-            "_text": "Раздел про визы и легализацию.",
+            "_text": load_content(content_path("visas/intro.md")),
             "_children": {
-                "ED (учебная)": {"_text": "ED-виза — структура раздела (позже наполним).", "_children": {}},
-                "DTV (Digital Nomad)": {"_text": "DTV — условия, документы, подача.", "_children": {}},
-                "Семейная": {"_text": "Семейная виза — варианты и требования.", "_children": {}},
-                "Бизнес": {"_text": "Бизнес-виза — как легально работать.", "_children": {}},
-                "Пенсионная": {"_text": "Пенсионная — требования и продления.", "_children": {}},
-                "Элит": {"_text": "Elite — пакеты, цены, нюансы.", "_children": {}},
-                "Продление штампов": {"_text": "Продления — сроки, штрафы, лайфхаки.", "_children": {}},
+                "ED (учебная)": {
+                    "_text": load_content(content_path("visas/ed/intro.md")),
+                    "_children": {
+                        "Кому подходит": {"_text": load_content(content_path("visas/ed/who_fits.md")), "_children": {}},
+                        "Документы": {"_text": load_content(content_path("visas/ed/docs.md")), "_children": {}},
+                        "Пошагово: оформление": {"_text": load_content(content_path("visas/ed/steps.md")), "_children": {}},
+                        "Сроки и продления": {"_text": load_content(content_path("visas/ed/extensions.md")), "_children": {}},
+                        "Сколько стоит": {"_text": load_content(content_path("visas/ed/cost.md")), "_children": {}},
+                        "Риски и ошибки": {"_text": load_content(content_path("visas/ed/risks.md")), "_children": {}},
+                    },
+                },
+                "DTV (Digital Nomad)": {
+                    "_text": load_content(content_path("visas/dtv/intro.md")),
+                    "_children": {
+                        "Кому подходит": {"_text": load_content(content_path("visas/dtv/who_fits.md")), "_children": {}},
+                        "Документы": {"_text": load_content(content_path("visas/dtv/docs.md")), "_children": {}},
+                        "Пошагово: подача": {"_text": load_content(content_path("visas/dtv/steps.md")), "_children": {}},
+                        "Сроки и продления": {"_text": load_content(content_path("visas/dtv/extensions.md")), "_children": {}},
+                        "Сколько стоит": {"_text": load_content(content_path("visas/dtv/cost.md")), "_children": {}},
+                        "Риски и ошибки": {"_text": load_content(content_path("visas/dtv/risks.md")), "_children": {}},
+                    },
+                },
+                "Семейная": {
+                    "_text": load_content(content_path("visas/family/intro.md")),
+                    "_children": {
+                        "Варианты семейных оснований": {"_text": load_content(content_path("visas/family/options.md")), "_children": {}},
+                        "Документы": {"_text": load_content(content_path("visas/family/docs.md")), "_children": {}},
+                        "Пошагово: оформление": {"_text": load_content(content_path("visas/family/steps.md")), "_children": {}},
+                        "Сроки и продления": {"_text": load_content(content_path("visas/family/extensions.md")), "_children": {}},
+                        "Сколько стоит": {"_text": load_content(content_path("visas/family/cost.md")), "_children": {}},
+                        "Риски и ошибки": {"_text": load_content(content_path("visas/family/risks.md")), "_children": {}},
+                    },
+                },
+                "Бизнес": {
+                    "_text": load_content(content_path("visas/business/intro.md")),
+                    "_children": {
+                        "Кому подходит": {"_text": load_content(content_path("visas/business/who_fits.md")), "_children": {}},
+                        "Документы": {"_text": load_content(content_path("visas/business/docs.md")), "_children": {}},
+                        "Пошагово: оформление": {"_text": load_content(content_path("visas/business/steps.md")), "_children": {}},
+                        "Work Permit: базовая логика": {"_text": load_content(content_path("visas/business/work_permit_basics.md")), "_children": {}},
+                        "Сколько стоит": {"_text": load_content(content_path("visas/business/cost.md")), "_children": {}},
+                        "Риски и ошибки": {"_text": load_content(content_path("visas/business/risks.md")), "_children": {}},
+                    },
+                },
+                "Пенсионная": {
+                    "_text": load_content(content_path("visas/retirement/intro.md")),
+                    "_children": {
+                        "Кому подходит": {"_text": load_content(content_path("visas/retirement/who_fits.md")), "_children": {}},
+                        "Финансовые требования": {"_text": load_content(content_path("visas/retirement/finance.md")), "_children": {}},
+                        "Документы": {"_text": load_content(content_path("visas/retirement/docs.md")), "_children": {}},
+                        "Пошагово: оформление": {"_text": load_content(content_path("visas/retirement/steps.md")), "_children": {}},
+                        "Продления": {"_text": load_content(content_path("visas/retirement/extensions.md")), "_children": {}},
+                        "Риски и ошибки": {"_text": load_content(content_path("visas/retirement/risks.md")), "_children": {}},
+                    },
+                },
+                "Элит": {
+                    "_text": load_content(content_path("visas/elite/intro.md")),
+                    "_children": {
+                        "Пакеты и отличия": {"_text": load_content(content_path("visas/elite/packages.md")), "_children": {}},
+                        "Что реально даёт": {"_text": load_content(content_path("visas/elite/benefits.md")), "_children": {}},
+                        "Сколько стоит": {"_text": load_content(content_path("visas/elite/cost.md")), "_children": {}},
+                        "Риски и ограничения": {"_text": load_content(content_path("visas/elite/risks.md")), "_children": {}},
+                    },
+                },
+                "Продление штампов": {
+                    "_text": load_content(content_path("visas/extensions/intro.md")),
+                    "_children": {
+                        "Где продлевать": {"_text": load_content(content_path("visas/extensions/where.md")), "_children": {}},
+                        "Какие документы": {"_text": load_content(content_path("visas/extensions/docs.md")), "_children": {}},
+                        "Сроки и штрафы": {"_text": load_content(content_path("visas/extensions/deadlines_fines.md")), "_children": {}},
+                        "Типовые ошибки": {"_text": load_content(content_path("visas/extensions/mistakes.md")), "_children": {}},
+                    },
+                },
             },
         },
 
@@ -229,11 +316,33 @@ MENU_TREE: Dict[str, Any] = {
         # ✅ 3) 🛡️ СТРАХОВКИ
         # ==========================================================
         "🛡️ Страховки": {
-            "_text": "Страховки — здоровье, путешествия, авто/байк, имущество.",
+            "_text": load_content(content_path("insurance/intro.md")),
             "_children": {
-                "Медицинская": {"_text": "Медицинская страховка — как выбрать.", "_children": {}},
-                "Путешествия": {"_text": "Travel страховка — нюансы.", "_children": {}},
-                "Авто/байк": {"_text": "Авто/байк страховка — что покрывает.", "_children": {}},
+                "Медицинская": {
+                    "_text": load_content(content_path("insurance/medical/intro.md")),
+                    "_children": {
+                        "Что важно в покрытии": {"_text": load_content(content_path("insurance/medical/coverage.md")), "_children": {}},
+                        "Амбулаторка vs стационар": {"_text": load_content(content_path("insurance/medical/opd_vs_ipd.md")), "_children": {}},
+                        "Как пользоваться (cashless/не cashless)": {"_text": load_content(content_path("insurance/medical/how_to_use.md")), "_children": {}},
+                        "Типовые отказы": {"_text": load_content(content_path("insurance/medical/denials.md")), "_children": {}},
+                    },
+                },
+                "Путешествия": {
+                    "_text": load_content(content_path("insurance/travel/intro.md")),
+                    "_children": {
+                        "Что должно быть в полисе": {"_text": load_content(content_path("insurance/travel/must_have.md")), "_children": {}},
+                        "Спорт/байк/экстрим": {"_text": load_content(content_path("insurance/travel/sport_bike.md")), "_children": {}},
+                        "Как оформить быстро": {"_text": load_content(content_path("insurance/travel/how_to_buy.md")), "_children": {}},
+                    },
+                },
+                "Авто/байк": {
+                    "_text": load_content(content_path("insurance/vehicle/intro.md")),
+                    "_children": {
+                        "Обязательная страховка": {"_text": load_content(content_path("insurance/vehicle/compulsory.md")), "_children": {}},
+                        "Добровольная страховка": {"_text": load_content(content_path("insurance/vehicle/voluntary.md")), "_children": {}},
+                        "ДТП: что делать": {"_text": load_content(content_path("insurance/vehicle/accident_steps.md")), "_children": {}},
+                    },
+                },
             },
         },
 
@@ -312,42 +421,78 @@ MENU_TREE: Dict[str, Any] = {
         },
 
         # ==========================================================
-        # ✅ 5) 🧰 СОВЕТЫ ПО БЫТУ И СЕРВИСЫ (ПОПРАВЛЕН ОТСТУП)
+        # ✅ 5) 🧰 СОВЕТЫ ПО БЫТУ И СЕРВИСЫ
         # ==========================================================
         "🧰 Советы по быту и сервисы": {
             "_text": load_content(content_path("services/intro.md")),
             "_children": {
                 "📱 Связь, SIM, интернет": {
                     "_text": load_content(content_path("services/sim_internet.md")),
-                    "_children": {},
+                    "_children": {
+                        "Как выбрать оператора": {"_text": load_content(content_path("services/sim/how_choose_operator.md")), "_children": {}},
+                        "Где купить SIM": {"_text": load_content(content_path("services/sim/where_buy.md")), "_children": {}},
+                        "Тарифы и пакеты": {"_text": load_content(content_path("services/sim/plans.md")), "_children": {}},
+                        "Роуминг/раздача интернета": {"_text": load_content(content_path("services/sim/tethering_roaming.md")), "_children": {}},
+                    },
                 },
                 "🚕 Такси и транспорт": {
                     "_text": load_content(content_path("services/taxi_transport.md")),
-                    "_children": {},
+                    "_children": {
+                        "Приложения такси": {"_text": load_content(content_path("services/transport/taxi_apps.md")), "_children": {}},
+                        "Тук-туки/мототакси": {"_text": load_content(content_path("services/transport/tuktuk_moto.md")), "_children": {}},
+                        "Аренда байка": {"_text": load_content(content_path("services/transport/bike_rent.md")), "_children": {}},
+                        "Штрафы и документы": {"_text": load_content(content_path("services/transport/fines_docs.md")), "_children": {}},
+                    },
                 },
                 "🍜 Доставка еды": {
                     "_text": load_content(content_path("services/food_delivery.md")),
-                    "_children": {},
+                    "_children": {
+                        "Какие приложения": {"_text": load_content(content_path("services/food/apps.md")), "_children": {}},
+                        "Как заказывать (если не знаешь язык)": {"_text": load_content(content_path("services/food/how_order_no_language.md")), "_children": {}},
+                        "Оплата и чаевые": {"_text": load_content(content_path("services/food/payment_tips.md")), "_children": {}},
+                    },
                 },
                 "💳 Оплата, карты, кошельки": {
                     "_text": load_content(content_path("services/payments_cards_qr.md")),
-                    "_children": {},
+                    "_children": {
+                        "QR-оплата": {"_text": load_content(content_path("services/payments/qr.md")), "_children": {}},
+                        "Наличные vs карта": {"_text": load_content(content_path("services/payments/cash_vs_card.md")), "_children": {}},
+                        "Комиссии и конвертация": {"_text": load_content(content_path("services/payments/fees_fx.md")), "_children": {}},
+                        "Блокировки и лимиты": {"_text": load_content(content_path("services/payments/blocks_limits.md")), "_children": {}},
+                    },
                 },
                 "🛒 Магазины и закупки": {
                     "_text": load_content(content_path("services/shops_groceries.md")),
-                    "_children": {},
+                    "_children": {
+                        "Где покупать продукты": {"_text": load_content(content_path("services/shops/groceries_where.md")), "_children": {}},
+                        "Бытовая химия/мелочи": {"_text": load_content(content_path("services/shops/household.md")), "_children": {}},
+                        "Онлайн-заказы": {"_text": load_content(content_path("services/shops/online.md")), "_children": {}},
+                    },
                 },
                 "🏠 Быт в квартире": {
                     "_text": load_content(content_path("services/home_life.md")),
-                    "_children": {},
+                    "_children": {
+                        "Вода, питьё, фильтры": {"_text": load_content(content_path("services/home/water_filters.md")), "_children": {}},
+                        "Электричество и техника": {"_text": load_content(content_path("services/home/electricity_appliances.md")), "_children": {}},
+                        "Насекомые и профилактика": {"_text": load_content(content_path("services/home/insects.md")), "_children": {}},
+                        "Стирка/прачечные": {"_text": load_content(content_path("services/home/laundry.md")), "_children": {}},
+                    },
                 },
                 "📦 Доставки и посылки": {
                     "_text": load_content(content_path("services/delivery_packages.md")),
-                    "_children": {},
+                    "_children": {
+                        "Локальные доставки": {"_text": load_content(content_path("services/delivery/local.md")), "_children": {}},
+                        "Международные посылки": {"_text": load_content(content_path("services/delivery/international.md")), "_children": {}},
+                        "Что нельзя отправлять": {"_text": load_content(content_path("services/delivery/prohibited.md")), "_children": {}},
+                    },
                 },
                 "🩺 Аптеки и базовая помощь": {
                     "_text": load_content(content_path("services/pharmacy_first_aid.md")),
-                    "_children": {},
+                    "_children": {
+                        "Как объяснить симптомы": {"_text": load_content(content_path("services/pharmacy/how_explain.md")), "_children": {}},
+                        "Что иметь в аптечке": {"_text": load_content(content_path("services/pharmacy/first_aid_kit.md")), "_children": {}},
+                        "Когда точно к врачу": {"_text": load_content(content_path("services/pharmacy/when_doctor.md")), "_children": {}},
+                    },
                 },
             },
         },
