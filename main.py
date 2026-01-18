@@ -469,7 +469,7 @@ MENU_TREE: Dict[str, Any] = {
                         "Онлайн-заказы": {"_text": load_content(content_path("services/shops/online.md")), "_children": {}},
                     },
                 },
-                "🏠 Быт в квартире": {
+                "🏠 Быт в квартире и доме": {
                     "_text": load_content(content_path("services/home_life.md")),
                     "_children": {
                         "Вода, питьё, фильтры": {"_text": load_content(content_path("services/home/water_filters.md")), "_children": {}},
