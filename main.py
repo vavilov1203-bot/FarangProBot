@@ -46,14 +46,7 @@ MENU_TREE: Dict[str, Any] = {
                "_text": load_content(content_path("urgent/first_72_money.md")),
                "_children": {},
            },
-           "🚕 Как уехать из аэропорта": {
-               "_text": load_content(content_path("urgent/first_72_transport.md")),
-               "_children": {},
-           },
-           "🏠 Первое жильё": {
-               "_text": load_content(content_path("urgent/first_72_housing.md")),
-               "_children": {},
-           },
+          
            "✅ Чек-лист 72 часа": {
                "_text": load_content(content_path("urgent/first_day_checklist.md")),
                "_children": {},
