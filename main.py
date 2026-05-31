@@ -32,35 +32,54 @@ MENU_TREE: Dict[str, Any] = {
         # 🚨 Я только приехал / мне срочно
         # ==========================================================
         "🚨 Я только приехал / мне срочно": {
-            "_text": load_content(content_path("urgent/intro.md")),
-            "_children": {
-                "⚠️ Таиланд — не рай": {
-                    "_text": load_content(content_path("urgent/thailand_not_paradise.md")),
-                    "_children": {},
-                },
-                "❌ Топ-5 ошибок первых дней": {
-                    "_text": load_content(content_path("urgent/top5_mistakes.md")),
-                    "_children": {},
-                },
-                "💱 Деньги: что можно / что нельзя": {
-                    "_text": load_content(content_path("urgent/money_do_dont.md")),
-                    "_children": {},
-                },
-                "📄 Виза: где ты уже рискуешь": {
-                    "_text": load_content(content_path("urgent/visa_risks.md")),
-                    "_children": {},
-                },
-                "🏠 Жильё: как не потерять депозит": {
-                    "_text": load_content(content_path("urgent/rent_deposit.md")),
-                    "_children": {},
-                },
-                "🧰 Что сделать в первый день": {
-                    "_text": load_content(content_path("urgent/first_day_checklist.md")),
-                    "_children": {},
-                },
-            },
-        },
-
+           "_text": load_content(content_path("urgent/intro.md")),
+           "_children": {
+               "✈️ Аэропорт": {
+                  "_text": load_content(content_path("urgent/first_72_airport.md")),
+                  "_children": {},
+           },
+           "📱 Связь": {
+               "_text": load_content(content_path("urgent/first_72_sim.md")),
+               "_children": {},
+           },
+           "💸 Деньги в первые дни": {
+               "_text": load_content(content_path("urgent/first_72_money.md")),
+               "_children": {},
+           },
+           "🚕 Как уехать из аэропорта": {
+               "_text": load_content(content_path("urgent/first_72_transport.md")),
+               "_children": {},
+           },
+           "🏠 Первое жильё": {
+               "_text": load_content(content_path("urgent/first_72_housing.md")),
+               "_children": {},
+           },
+           "✅ Чек-лист 72 часа": {
+               "_text": load_content(content_path("urgent/first_day_checklist.md")),
+               "_children": {},
+           },
+           "⚠️ Таиланд — не рай": {
+               "_text": load_content(content_path("urgent/thailand_not_paradise.md")),
+               "_children": {},
+           },
+           "❌ Топ-5 ошибок первых дней": {
+               "_text": load_content(content_path("urgent/top5_mistakes.md")),
+               "_children": {},
+           },
+           "💸 Деньги: что можно / что нельзя": {
+               "_text": load_content(content_path("urgent/money_do_dont.md")),
+               "_children": {},
+           },
+           "📄 Виза: где ты уже рискуешь": {
+               "_text": load_content(content_path("urgent/visa_risks.md")),
+               "_children": {},
+           },
+           "🏠 Жильё: как не потерять депозит": {
+               "_text": load_content(content_path("urgent/rent_deposit.md")),
+               "_children": {},
+           },
+       },
+   },
         # ==========================================================
         # 📄 Виза и легализация
         # ==========================================================
