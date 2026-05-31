@@ -66,18 +66,7 @@ MENU_TREE: Dict[str, Any] = {
                "_text": load_content(content_path("urgent/top5_mistakes.md")),
                "_children": {},
            },
-           "💸 Деньги: что можно / что нельзя": {
-               "_text": load_content(content_path("urgent/money_do_dont.md")),
-               "_children": {},
-           },
-           "📄 Виза: где ты уже рискуешь": {
-               "_text": load_content(content_path("urgent/visa_risks.md")),
-               "_children": {},
-           },
-           "🏠 Жильё: как не потерять депозит": {
-               "_text": load_content(content_path("urgent/rent_deposit.md")),
-               "_children": {},
-           },
+              
        },
    },
         # ==========================================================
