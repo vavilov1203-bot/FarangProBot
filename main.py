@@ -3,7 +3,12 @@ import logging
 import sqlite3
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import (
+    InlineKeyboardButton, 
+    InlineKeyboardMarkup, 
+    Update, 
+    ReplyKeyboardRemove
+)
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, ContextTypes
 )
@@ -399,6 +404,11 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, edit: bo
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         context.user_data["path"] = []
+        # Удаляем старую ReplyKeyboard (если была)
+        await update.effective_message.reply_text(
+            "Загрузка меню...",
+            reply_markup=ReplyKeyboardRemove()
+        )
         await show_menu(update, context)
     except Exception as e:
         logger.error(f"start error: {e}", exc_info=True)
@@ -467,7 +477,6 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        # === ПРОВЕРКА ПРАВ ===
         admin_id = os.getenv("ADMIN_USER_ID")
         if not admin_id or str(update.effective_user.id) != admin_id:
             await update.callback_query.edit_message_text("⛔ Доступ запрещён.")
