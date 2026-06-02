@@ -3,7 +3,12 @@ import logging
 import sqlite3
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import (
+    InlineKeyboardButton, 
+    InlineKeyboardMarkup, 
+    Update, 
+    ReplyKeyboardRemove
+)
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, ContextTypes
 )
@@ -22,12 +27,14 @@ DB_PATH = os.path.join(BASE_DIR, "farangprobot.db")
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS section_stats (
             section TEXT PRIMARY KEY,
             count INTEGER DEFAULT 0
         )
     """)
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS user_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,6 +44,28 @@ def init_db():
             visited_at TEXT
         )
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_favorites_v2 (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            node_id TEXT,
+            section_name TEXT,
+            added_at TEXT,
+            UNIQUE(user_id, node_id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS search_queries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            query TEXT,
+            results_count INTEGER,
+            searched_at TEXT
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -53,7 +82,7 @@ def increment_stat(section: str):
         conn.commit()
         conn.close()
     except Exception as e:
-        logger.error(f"increment_stat error: {e}", exc_info=True)
+        logger.error(f"increment_stat error: {e}")
 
 
 def log_user_visit(user_id: int, username: str, section: str):
@@ -67,33 +96,67 @@ def log_user_visit(user_id: int, username: str, section: str):
         conn.commit()
         conn.close()
     except Exception as e:
-        logger.error(f"log_user_visit error: {e}", exc_info=True)
+        logger.error(f"log_user_visit error: {e}")
+
+
+def log_search_query(user_id: int, query: str, results_count: int):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO search_queries (user_id, query, results_count, searched_at)
+            VALUES (?, ?, ?, ?)
+        """, (user_id, query, results_count, datetime.now().isoformat()))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"log_search_query error: {e}")
+
+
+def add_to_favorites(user_id: int, node_id: str, section_name: str) -> bool:
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT OR IGNORE INTO user_favorites_v2 (user_id, node_id, section_name, added_at)
+            VALUES (?, ?, ?, ?)
+        """, (user_id, node_id, section_name, datetime.now().isoformat()))
+        added = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        return added
+    except Exception as e:
+        logger.error(f"add_to_favorites error: {e}")
+        return False
+
+
+def get_user_favorites(user_id: int) -> List[tuple]:
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT node_id, section_name FROM user_favorites_v2 
+            WHERE user_id = ? ORDER BY added_at DESC
+        """, (user_id,))
+        result = cursor.fetchall()
+        conn.close()
+        return result
+    except Exception:
+        return []
 
 
 def get_stats(period: str = "all") -> List[tuple]:
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-
         if period == "today":
             today = datetime.now().date().isoformat()
-            cursor.execute("""
-                SELECT section, COUNT(*) as cnt 
-                FROM user_history 
-                WHERE DATE(visited_at) = ? 
-                GROUP BY section ORDER BY cnt DESC
-            """, (today,))
+            cursor.execute("SELECT section, COUNT(*) FROM user_history WHERE DATE(visited_at)=? GROUP BY section ORDER BY COUNT(*) DESC", (today,))
         elif period == "week":
             week_ago = (datetime.now() - timedelta(days=7)).isoformat()
-            cursor.execute("""
-                SELECT section, COUNT(*) as cnt 
-                FROM user_history 
-                WHERE visited_at >= ? 
-                GROUP BY section ORDER BY cnt DESC
-            """, (week_ago,))
+            cursor.execute("SELECT section, COUNT(*) FROM user_history WHERE visited_at >= ? GROUP BY section ORDER BY COUNT(*) DESC", (week_ago,))
         else:
             cursor.execute("SELECT section, count FROM section_stats ORDER BY count DESC")
-
         result = cursor.fetchall()
         conn.close()
         return result
@@ -105,12 +168,7 @@ def get_top_users(limit: int = 10) -> List[tuple]:
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT username, COUNT(*) as visits 
-            FROM user_history 
-            GROUP BY user_id 
-            ORDER BY visits DESC LIMIT ?
-        """, (limit,))
+        cursor.execute("SELECT username, COUNT(*) FROM user_history GROUP BY user_id ORDER BY COUNT(*) DESC LIMIT ?", (limit,))
         result = cursor.fetchall()
         conn.close()
         return result
@@ -122,11 +180,7 @@ def get_recent_visits(limit: int = 12) -> List[tuple]:
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT username, section, visited_at 
-            FROM user_history 
-            ORDER BY visited_at DESC LIMIT ?
-        """, (limit,))
+        cursor.execute("SELECT username, section, visited_at FROM user_history ORDER BY visited_at DESC LIMIT ?", (limit,))
         result = cursor.fetchall()
         conn.close()
         return result
@@ -149,10 +203,10 @@ def load_content(path: str) -> str:
             return file.read()
     except FileNotFoundError:
         logger.warning(f"Файл не найден: {path}")
-        return f"# Раздел в разработке\n\nФайл не найден: {path}"
+        return "Раздел находится в разработке."
     except Exception as e:
-        logger.error(f"load_content error: {e}", exc_info=True)
-        return "Ошибка загрузки контента."
+        logger.error(f"load_content error: {e}")
+        return "Раздел находится в разработке."
 
 
 def get_text(node: Dict[str, Any]) -> str:
@@ -165,7 +219,7 @@ def get_text(node: Dict[str, Any]) -> str:
         content = load_content(content_path(key))
         _content_cache[key] = content
         return content
-    return "Раздел в разработке"
+    return "Раздел находится в разработке."
 
 
 # ==================== МЕНЮ ====================
@@ -323,11 +377,12 @@ MENU_TREE: Dict[str, Any] = {
 }
 
 
-# ==================== УНИКАЛЬНЫЕ КОРОТКИЕ ID ====================
+# ==================== ID СИСТЕМА ====================
 ID_COUNTER = 0
 ID_TO_NODE: Dict[str, Dict[str, Any]] = {}
 ID_TO_PATH: Dict[str, List[str]] = {}
 ID_TO_NAME: Dict[str, str] = {}
+PATH_TO_ID: Dict[str, str] = {}
 
 def assign_node_ids(node: Dict[str, Any], current_path: List[str] = None):
     global ID_COUNTER
@@ -342,10 +397,15 @@ def assign_node_ids(node: Dict[str, Any], current_path: List[str] = None):
         ID_TO_NODE[node_id] = child
         ID_TO_PATH[node_id] = new_path
         ID_TO_NAME[node_id] = name
+        PATH_TO_ID[".".join(new_path)] = node_id
 
         assign_node_ids(child, new_path)
 
 assign_node_ids(MENU_TREE)
+
+
+HELP_ANALYZE_PATH = ["🆘 Нужна помощь", "🆘 Разобрать мою ситуацию"]
+HELP_ANALYZE_ID = PATH_TO_ID.get(".".join(HELP_ANALYZE_PATH))
 
 
 def get_node_by_path(path: List[str]) -> Optional[Dict[str, Any]]:
@@ -358,24 +418,40 @@ def get_node_by_path(path: List[str]) -> Optional[Dict[str, Any]]:
         return None
 
 
+def make_breadcrumbs(path: List[str]) -> str:
+    if not path:
+        return ""
+    parts = ["🏠 Главное меню"]
+    for name in path:
+        parts.append(name)
+    return " → ".join(parts) + "\n\n"
+
+
 def make_keyboard(node: Dict[str, Any], path: List[str]) -> InlineKeyboardMarkup:
     buttons = []
     for name in node.get("_children", {}):
-        full_path = ".".join(path + [name])
-        node_id = None
-        for nid, p in ID_TO_PATH.items():
-            if ".".join(p) == full_path:
-                node_id = nid
-                break
-
+        full_path_key = ".".join(path + [name])
+        node_id = PATH_TO_ID.get(full_path_key)
         if node_id:
             buttons.append([InlineKeyboardButton(name, callback_data=f"nav:{node_id}")])
 
-    nav_row = []
+    # Кнопка помощи в важных разделах
+    important = ["📄 Виза и легализация", "💸 Деньги и жильё", "⚠️ Реальность Таиланда"]
+    if path and (path[0] in important or any(s in path for s in important)):
+        if HELP_ANALYZE_ID:
+            buttons.append([InlineKeyboardButton("🆘 Разобрать мою ситуацию", callback_data=f"nav:{HELP_ANALYZE_ID}")])
+
+    # Кнопка избранного
     if path:
-        nav_row.append(InlineKeyboardButton("⬅️ Назад", callback_data="action:back"))
-    nav_row.append(InlineKeyboardButton("🏠 Главное меню", callback_data="action:home"))
-    buttons.append(nav_row)
+        buttons.append([InlineKeyboardButton("⭐ В избранное", callback_data="action:fav")])
+
+    # Навигационные кнопки только если пользователь не в главном меню
+    if path:
+        nav_row = [
+            InlineKeyboardButton("⬅️ Назад", callback_data="action:back"),
+            InlineKeyboardButton("🏠 Главное меню", callback_data="action:home")
+        ]
+        buttons.append(nav_row)
 
     return InlineKeyboardMarkup(buttons)
 
@@ -385,7 +461,8 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, edit: bo
     try:
         path: List[str] = context.user_data.get("path", [])
         node = get_node_by_path(path) or MENU_TREE
-        text = get_text(node)
+        breadcrumbs = make_breadcrumbs(path)
+        text = breadcrumbs + get_text(node)
         keyboard = make_keyboard(node, path)
 
         if edit and update.callback_query:
@@ -399,6 +476,13 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, edit: bo
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         context.user_data["path"] = []
+        await update.effective_message.reply_text(
+            "Farang Pro\n\n"
+            "Практичный помощник по жизни в Таиланде:\n"
+            "визы, жильё, деньги, безопасность, адаптация и типичные ошибки.\n\n"
+            "Выбери, с чего начать:",
+            reply_markup=ReplyKeyboardRemove()
+        )
         await show_menu(update, context)
     except Exception as e:
         logger.error(f"start error: {e}", exc_info=True)
@@ -424,6 +508,17 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await show_menu(update, context, edit=True)
             return
 
+        if data == "action:fav":
+            if path:
+                section_name = path[-1]
+                full_path_key = ".".join(path)
+                node_id = PATH_TO_ID.get(full_path_key)
+                if node_id:
+                    added = add_to_favorites(user.id, node_id, section_name)
+                    msg = "⭐ Добавлено в избранное" if added else "⭐ Уже есть в избранном"
+                    await query.answer(msg, show_alert=True)
+            return
+
         if data.startswith("nav:"):
             node_id = data[4:]
             if node_id in ID_TO_PATH:
@@ -446,59 +541,89 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error(f"button_handler error: {e}", exc_info=True)
 
 
-async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        admin_id = os.getenv("ADMIN_USER_ID")
-        if not admin_id or str(update.effective_user.id) != admin_id:
-            await update.message.reply_text("⛔ Доступ запрещён.")
+        query_text = " ".join(context.args).strip().lower()
+        if not query_text:
+            await update.effective_message.reply_text("Используйте: /search <запрос>")
             return
 
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("📊 Общая статистика", callback_data="admin:stats")],
-            [InlineKeyboardButton("📅 За сегодня", callback_data="admin:today")],
-            [InlineKeyboardButton("📆 За неделю", callback_data="admin:week")],
-            [InlineKeyboardButton("👥 Топ пользователей", callback_data="admin:users")],
-            [InlineKeyboardButton("🕒 Последние посещения", callback_data="admin:recent")],
-        ])
-        await update.message.reply_text("📊 **Админ-панель**", reply_markup=keyboard)
+        results = []
+        for node_id, node in ID_TO_NODE.items():
+            name = ID_TO_NAME.get(node_id, "")
+            if query_text in name.lower() or query_text in get_text(node).lower():
+                results.append((node_id, name))
+
+        log_search_query(update.effective_user.id, query_text, len(results))
+
+        if not results:
+            await update.effective_message.reply_text("Ничего не найдено.")
+            return
+
+        keyboard = [[InlineKeyboardButton(name, callback_data=f"nav:{nid}")] for nid, name in results[:15]]
+        await update.effective_message.reply_text("Результаты поиска:", reply_markup=InlineKeyboardMarkup(keyboard))
     except Exception as e:
-        logger.error(f"admin_command error: {e}", exc_info=True)
+        logger.error(f"search_command error: {e}", exc_info=True)
+
+
+async def favorites_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        favs = get_user_favorites(update.effective_user.id)
+        if not favs:
+            await update.effective_message.reply_text("У вас пока нет избранных разделов.")
+            return
+
+        keyboard = [[InlineKeyboardButton(name, callback_data=f"nav:{nid}")] for nid, name in favs]
+        await update.effective_message.reply_text("⭐ Ваше избранное:", reply_markup=InlineKeyboardMarkup(keyboard))
+    except Exception as e:
+        logger.error(f"favorites_command error: {e}", exc_info=True)
+
+
+async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    admin_id = os.getenv("ADMIN_USER_ID")
+    if not admin_id or str(update.effective_user.id) != admin_id:
+        await update.effective_message.reply_text("⛔ Доступ запрещён.")
+        return
+
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📊 Общая статистика", callback_data="admin:stats")],
+        [InlineKeyboardButton("📅 За сегодня", callback_data="admin:today")],
+        [InlineKeyboardButton("📆 За неделю", callback_data="admin:week")],
+        [InlineKeyboardButton("👥 Топ пользователей", callback_data="admin:users")],
+        [InlineKeyboardButton("🕒 Последние посещения", callback_data="admin:recent")],
+    ])
+    await update.effective_message.reply_text("📊 Админ-панель", reply_markup=keyboard)
 
 
 async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        # === ПРОВЕРКА ПРАВ ===
-        admin_id = os.getenv("ADMIN_USER_ID")
-        if not admin_id or str(update.effective_user.id) != admin_id:
-            await update.callback_query.edit_message_text("⛔ Доступ запрещён.")
-            return
+    admin_id = os.getenv("ADMIN_USER_ID")
+    if not admin_id or str(update.effective_user.id) != admin_id:
+        await update.callback_query.edit_message_text("⛔ Доступ запрещён.")
+        return
 
-        query = update.callback_query
-        await query.answer()
-        data = query.data
+    query = update.callback_query
+    await query.answer()
+    data = query.data
 
-        if data == "admin:stats":
-            stats = get_stats("all")
-            text = "📊 Общая статистика\n\n" + "\n".join([f"• {s}: {c}" for s, c in stats[:12]])
-        elif data == "admin:today":
-            stats = get_stats("today")
-            text = "📅 Статистика за сегодня\n\n" + "\n".join([f"• {s}: {c}" for s, c in stats])
-        elif data == "admin:week":
-            stats = get_stats("week")
-            text = "📆 Статистика за неделю\n\n" + "\n".join([f"• {s}: {c}" for s, c in stats])
-        elif data == "admin:users":
-            users = get_top_users(12)
-            text = "👥 Топ пользователей\n\n" + "\n".join([f"• {u} — {c} посещений" for u, c in users])
-        elif data == "admin:recent":
-            visits = get_recent_visits(10)
-            text = "🕒 Последние посещения\n\n" + "\n".join([f"• {u} → {s}" for u, s, _ in visits])
-        else:
-            text = "Неизвестная команда"
+    if data == "admin:stats":
+        stats = get_stats("all")
+        text = "📊 Общая статистика\n\n" + "\n".join([f"• {s}: {c}" for s, c in stats[:15]])
+    elif data == "admin:today":
+        stats = get_stats("today")
+        text = "📅 Статистика за сегодня\n\n" + "\n".join([f"• {s}: {c}" for s, c in stats])
+    elif data == "admin:week":
+        stats = get_stats("week")
+        text = "📆 Статистика за неделю\n\n" + "\n".join([f"• {s}: {c}" for s, c in stats])
+    elif data == "admin:users":
+        users = get_top_users(15)
+        text = "👥 Топ пользователей\n\n" + "\n".join([f"• {u} — {c} посещений" for u, c in users])
+    elif data == "admin:recent":
+        visits = get_recent_visits(12)
+        text = "🕒 Последние посещения\n\n" + "\n".join([f"• {u} → {s}" for u, s, _ in visits])
+    else:
+        text = "Неизвестная команда"
 
-        await query.edit_message_text(text, reply_markup=query.message.reply_markup)
-
-    except Exception as e:
-        logger.error(f"admin_callback error: {e}", exc_info=True)
+    await query.edit_message_text(text, reply_markup=query.message.reply_markup)
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
@@ -507,7 +632,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 
 # ==================== ЗАПУСК ====================
 def main():
-    token = "7082328352:AAE4kfCe47MXDfZCeMpyY_YDrpMG6Vndch0"
+    token = os.getenv("BOT_TOKEN", "").strip()
     if not token:
         raise RuntimeError("BOT_TOKEN не найден!")
 
@@ -515,6 +640,8 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("admin", admin_command))
+    app.add_handler(CommandHandler("search", search_command))
+    app.add_handler(CommandHandler("favorites", favorites_command))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
