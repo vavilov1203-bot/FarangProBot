@@ -271,7 +271,7 @@ def get_text(node: Dict[str, Any]) -> str:
     return "Раздел находится в разработке."
 
 
-# ==================== МЕНЮ (оставлено без изменений) ====================
+# ==================== МЕНЮ (без изменений) ====================
 MENU_TREE: Dict[str, Any] = {
     "_text": "Выбери пункт из меню 👇",
     "_children": {
@@ -491,13 +491,20 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, edit: bo
                     text=text, reply_markup=keyboard, disable_web_page_preview=True
                 )
             except Exception as e:
-                if "Message is not modified" in str(e):
+                error_text = str(e)
+                if "Message is not modified" in error_text:
                     try:
                         await update.callback_query.answer("Вы уже в этом разделе")
                     except:
                         pass
                 else:
                     logger.error(f"edit_message_text error: {e}")
+                    try:
+                        await update.effective_message.reply_text(
+                            text=text, reply_markup=keyboard, disable_web_page_preview=True
+                        )
+                    except Exception as e2:
+                        logger.error(f"reply_text fallback error: {e2}")
         else:
             await update.effective_message.reply_text(
                 text=text, reply_markup=keyboard, disable_web_page_preview=True
@@ -525,7 +532,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         query = update.callback_query
         data = query.data or ""
-        logger.info(f"Callback data: {data}")
+        old_path = context.user_data.get("path", [])
+        logger.info(f"Callback data: {data} | old_path: {old_path}")
 
         path: List[str] = context.user_data.get("path", [])
         user = update.effective_user
@@ -600,7 +608,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 if node is not None:
                     context.user_data["path"] = new_path
                     section_name = ID_TO_NAME.get(node_id, "")
-                    logger.info(f"Opening path: {new_path}")
+                    logger.info(f"Opening path: {new_path} | node_id: {node_id} | section: {section_name}")
                     try:
                         increment_stat(section_name)
                         log_user_visit(user.id, user.username, section_name)
@@ -610,10 +618,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     await show_menu(update, context, edit=True)
                     return
                 else:
-                    await query.answer("Раздел временно недоступен. Нажмите /start", show_alert=True)
+                    await query.answer("Раздел обновился. Нажмите /start", show_alert=True)
                     return
             else:
-                await query.answer("Раздел временно недоступен. Нажмите /start", show_alert=True)
+                await query.answer("Раздел обновился. Нажмите /start", show_alert=True)
                 return
 
         await query.answer("Неизвестная команда. Используйте /start", show_alert=True)
@@ -736,8 +744,13 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await query.edit_message_text(text, reply_markup=query.message.reply_markup)
     except Exception as e:
-        if "Message is not modified" not in str(e):
-            logger.error(f"admin edit error: {e}")
+        if "Message is not modified" in str(e):
+            try:
+                await query.answer("Вы уже в этом разделе")
+            except:
+                pass
+        else:
+            logger.error(f"admin_callback edit error: {e}")
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
@@ -760,7 +773,7 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
-    logger.info("FarangProBot запущен (технические исправления)")
+    logger.info("FarangProBot v1.4 запущен (стабилизированная версия)")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
