@@ -24,6 +24,8 @@ logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "farangprobot.db")
 
+CURRENT_MENU_VERSION = "v4"
+
 
 # ==================== БАЗА ДАННЫХ ====================
 def init_db():
@@ -238,7 +240,7 @@ def get_recent_visits(limit: int = 12) -> List[tuple]:
 init_db()
 
 
-# ==================== КЭШ И ЗАГРУЗКА КОНТЕНТА ====================
+# ==================== КЭШ ====================
 _content_cache: Dict[str, str] = {}
 
 
@@ -272,7 +274,7 @@ def get_text(node: Dict[str, Any]) -> str:
     return "Раздел находится в разработке."
 
 
-# ==================== МЕНЮ (без изменений) ====================
+# ==================== МЕНЮ ====================
 MENU_TREE: Dict[str, Any] = {
     "_text": "Выбери пункт из меню 👇",
     "_children": {
@@ -391,7 +393,6 @@ def assign_node_ids(node: Dict[str, Any], current_path: List[str] = None):
 
 assign_node_ids(MENU_TREE)
 
-# Логирование ID для отладки
 logger.info("=== Stable ID mapping (первые 15) ===")
 for i, (nid, pth) in enumerate(list(ID_TO_PATH.items())[:15]):
     logger.info(f"{nid} -> {pth}")
@@ -431,7 +432,7 @@ def make_keyboard(
         node_id = PATH_TO_ID.get(full_path_key)
         if node_id:
             buttons.append([
-                InlineKeyboardButton(name, callback_data=f"nav:{node_id}")
+                InlineKeyboardButton(name, callback_data=f"nav:{CURRENT_MENU_VERSION}:{node_id}")
             ])
 
     important = [
@@ -444,7 +445,7 @@ def make_keyboard(
     if path and (path[0] in important or any(s in path for s in important)):
         if HELP_ANALYZE_ID:
             buttons.append([
-                InlineKeyboardButton("🆘 Разобрать мою ситуацию", callback_data=f"nav:{HELP_ANALYZE_ID}")
+                InlineKeyboardButton("🆘 Разобрать мою ситуацию", callback_data=f"nav:{CURRENT_MENU_VERSION}:{HELP_ANALYZE_ID}")
             ])
 
     if path and user_id:
@@ -484,7 +485,14 @@ def make_keyboard(
 async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         path: List[str] = context.user_data.get("path", [])
-        node = get_node_by_path(path) or MENU_TREE
+        node = get_node_by_path(path)
+
+        if node is None:
+            logger.error(f"INVALID_PATH_IN_SHOW_MENU path={path}")
+            context.user_data["path"] = []
+            path = []
+            node = MENU_TREE
+
         breadcrumbs = make_breadcrumbs(path)
         text = breadcrumbs + get_text(node)
 
@@ -574,7 +582,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await query.answer("У вас пока нет избранных разделов.", show_alert=True)
                 return
             keyboard = [
-                [InlineKeyboardButton(name, callback_data=f"nav:{nid}")] for nid, name in favs
+                [InlineKeyboardButton(name, callback_data=f"nav:{CURRENT_MENU_VERSION}:{nid}")] 
+                for nid, name in favs
             ]
             await update.effective_message.reply_text(
                 "⭐ Ваше избранное:\n\nВыберите раздел для перехода:",
@@ -590,27 +599,41 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         if data.startswith("nav:"):
-            node_id = data[4:]
-            if node_id in ID_TO_PATH:
-                new_path = ID_TO_PATH[node_id]
-                node = get_node_by_path(new_path)
-                if node is not None:
-                    context.user_data["path"] = new_path
-                    section_name = ID_TO_NAME.get(node_id, "")
-                    logger.info(f"Opening path: {new_path} | node_id: {node_id}")
-                    try:
-                        increment_stat(section_name)
-                        log_user_visit(user.id, user.username, section_name)
-                    except Exception:
-                        pass
-                    await show_menu(update, context)
-                    return
-                else:
-                    await query.answer("Раздел обновился. Нажмите /start", show_alert=True)
-                    return
-            else:
-                await query.answer("Раздел обновился. Нажмите /start", show_alert=True)
+            parts = data.split(":")
+            if len(parts) != 3:
+                await query.answer("Меню обновилось. Нажмите /start", show_alert=True)
                 return
+
+            _, version, node_id = parts
+
+            if version != CURRENT_MENU_VERSION:
+                await query.answer("Меню обновилось. Нажмите /start", show_alert=True)
+                return
+
+            new_path = ID_TO_PATH.get(node_id)
+            logger.info(f"NAV_CLICK node_id={node_id} nou_path={new_path}")
+
+            if not new_path:
+                await query.answer("Раздел устарел. Нажмите /start", show_alert=True)
+                return
+
+            node = get_node_by_path(new_path)
+            if node is None:
+                logger.error(f"NODE_NOT_FOUND node_id={node_id} path={new_path}")
+                await query.answer("Раздел временно недоступен. Нажмите /start", show_alert=True)
+                return
+
+            context.user_data["path"] = list(new_path)
+            section_name = ID_TO_NAME.get(node_id, new_path[-1])
+
+            try:
+                increment_stat(section_name)
+                log_user_visit(user.id, user.username, section_name)
+            except Exception:
+                pass
+
+            await show_menu(update, context)
+            return
 
         await query.answer("Неизвестная команда. Используйте /start", show_alert=True)
 
@@ -638,7 +661,8 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         keyboard = [
-            [InlineKeyboardButton(name, callback_data=f"nav:{nid}")] for nid, name in results[:15]
+            [InlineKeyboardButton(name, callback_data=f"nav:{CURRENT_MENU_VERSION}:{nid}")] 
+            for nid, name in results[:15]
         ]
         await update.effective_message.reply_text(
             "Результаты поиска:", reply_markup=InlineKeyboardMarkup(keyboard)
@@ -655,7 +679,8 @@ async def favorites_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         keyboard = [
-            [InlineKeyboardButton(name, callback_data=f"nav:{nid}")] for nid, name in favs
+            [InlineKeyboardButton(name, callback_data=f"nav:{CURRENT_MENU_VERSION}:{nid}")] 
+            for nid, name in favs
         ]
         await update.effective_message.reply_text(
             "⭐ Ваше избранное:", reply_markup=InlineKeyboardMarkup(keyboard)
@@ -736,13 +761,25 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     logger.error("Глобальная ошибка:", exc_info=context.error)
 
 
+# ==================== post_init ====================
+async def post_init(application: Application) -> None:
+    await application.bot.delete_webhook(drop_pending_updates=True)
+    logger.info("Старый webhook удалён, pending updates сброшены")
+
+
 # ==================== ЗАПУСК ====================
 def main():
     token = (os.getenv("BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN") or "").strip()
     if not token:
         raise RuntimeError("BOT_TOKEN / TELEGRAM_BOT_TOKEN не найден!")
 
-    app = Application.builder().token(token).build()
+    # Создаём приложение с post_init через builder
+    app = (
+        Application.builder()
+        .token(token)
+        .post_init(post_init)
+        .build()
+    )
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("admin", admin_command))
@@ -752,8 +789,22 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
-    logger.info("FarangProBot v4.0 запущен (только reply_text + стабильные path-based ID)")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    logger.info("FarangProBot v6.2 запущен (Render Web Service + Webhook)")
+
+    port = int(os.environ.get("PORT", "10000"))
+    webhook_url = os.environ.get("WEBHOOK_URL")
+
+    if not webhook_url:
+        raise RuntimeError("WEBHOOK_URL не найден в переменных окружения!")
+
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=port,
+        url_path=token,
+        webhook_url=f"{webhook_url}/{token}",
+        allowed_updates=Update.ALL_TYPES,
+        drop_pending_updates=True
+    )
 
 
 if __name__ == "__main__":
