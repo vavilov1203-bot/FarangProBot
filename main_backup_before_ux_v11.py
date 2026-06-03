@@ -3,11 +3,10 @@ import logging
 import sqlite3
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
-
 from telegram import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Update,
+    InlineKeyboardButton, 
+    InlineKeyboardMarkup, 
+    Update, 
     ReplyKeyboardRemove
 )
 from telegram.ext import (
@@ -146,55 +145,16 @@ def get_user_favorites(user_id: int) -> List[tuple]:
         return []
 
 
-def is_favorite(user_id: int, node_id: str) -> bool:
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT 1 FROM user_favorites_v2 
-            WHERE user_id = ? AND node_id = ? LIMIT 1
-        """, (user_id, node_id))
-        result = cursor.fetchone() is not None
-        conn.close()
-        return result
-    except Exception as e:
-        logger.error(f"is_favorite error: {e}")
-        return False
-
-
-def remove_from_favorites(user_id: int, node_id: str) -> bool:
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute("""
-            DELETE FROM user_favorites_v2 
-            WHERE user_id = ? AND node_id = ?
-        """, (user_id, node_id))
-        removed = cursor.rowcount > 0
-        conn.commit()
-        conn.close()
-        return removed
-    except Exception as e:
-        logger.error(f"remove_from_favorites error: {e}")
-        return False
-
-
 def get_stats(period: str = "all") -> List[tuple]:
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         if period == "today":
             today = datetime.now().date().isoformat()
-            cursor.execute(
-                "SELECT section, COUNT(*) FROM user_history WHERE DATE(visited_at)=? GROUP BY section ORDER BY COUNT(*) DESC",
-                (today,)
-            )
+            cursor.execute("SELECT section, COUNT(*) FROM user_history WHERE DATE(visited_at)=? GROUP BY section ORDER BY COUNT(*) DESC", (today,))
         elif period == "week":
             week_ago = (datetime.now() - timedelta(days=7)).isoformat()
-            cursor.execute(
-                "SELECT section, COUNT(*) FROM user_history WHERE visited_at >= ? GROUP BY section ORDER BY COUNT(*) DESC",
-                (week_ago,)
-            )
+            cursor.execute("SELECT section, COUNT(*) FROM user_history WHERE visited_at >= ? GROUP BY section ORDER BY COUNT(*) DESC", (week_ago,))
         else:
             cursor.execute("SELECT section, count FROM section_stats ORDER BY count DESC")
         result = cursor.fetchall()
@@ -208,10 +168,7 @@ def get_top_users(limit: int = 10) -> List[tuple]:
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT username, COUNT(*) FROM user_history GROUP BY user_id ORDER BY COUNT(*) DESC LIMIT ?",
-            (limit,)
-        )
+        cursor.execute("SELECT username, COUNT(*) FROM user_history GROUP BY user_id ORDER BY COUNT(*) DESC LIMIT ?", (limit,))
         result = cursor.fetchall()
         conn.close()
         return result
@@ -223,10 +180,7 @@ def get_recent_visits(limit: int = 12) -> List[tuple]:
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT username, section, visited_at FROM user_history ORDER BY visited_at DESC LIMIT ?",
-            (limit,)
-        )
+        cursor.execute("SELECT username, section, visited_at FROM user_history ORDER BY visited_at DESC LIMIT ?", (limit,))
         result = cursor.fetchall()
         conn.close()
         return result
@@ -240,10 +194,8 @@ init_db()
 # ==================== КЭШ ====================
 _content_cache: Dict[str, str] = {}
 
-
 def content_path(relative_path: str) -> str:
     return os.path.join(BASE_DIR, "content", relative_path)
-
 
 def load_content(path: str) -> str:
     try:
@@ -274,85 +226,151 @@ def get_text(node: Dict[str, Any]) -> str:
 MENU_TREE: Dict[str, Any] = {
     "_text": "Выбери пункт из меню 👇",
     "_children": {
-        "🚨 Я только приехал": {
+        "🚨 Я только приехал / мне срочно": {
             "_file": "urgent/intro.md",
             "_children": {
-                "✈️ Аэропорт и первые часы": {"_file": "urgent/first_72_airport.md", "_children": {}},
-                "📱 Связь: SIM / eSIM": {"_file": "urgent/first_72_sim.md", "_children": {}},
+                "✈️ Аэропорт": {"_file": "urgent/first_72_airport.md", "_children": {}},
+                "📱 Связь": {"_file": "urgent/first_72_sim.md", "_children": {}},
                 "💸 Деньги в первые дни": {"_file": "urgent/first_72_money.md", "_children": {}},
                 "✅ Чек-лист 72 часа": {"_file": "urgent/first_day_checklist.md", "_children": {}},
+                "⚠️ Таиланд — не рай": {"_file": "urgent/thailand_not_paradise.md", "_children": {}},
                 "❌ Топ-5 ошибок первых дней": {"_file": "urgent/top5_mistakes.md", "_children": {}},
-                "🧳 С семьёй и/или питомцем": {"_file": "urgent/family_pets.md", "_children": {}},
             },
         },
         "📄 Виза и легализация": {
             "_file": "visa/intro.md",
             "_children": {
-                "📚 Туристические визы": {"_file": "visa/tourist.md", "_children": {}},
-                "🧑‍🎓 Учебные визы ED": {"_file": "visa/ed.md", "_children": {}},
-                "💼 Рабочие и бизнес-визы": {"_file": "visa/business_work.md", "_children": {}},
-                "❤️ Семейные и пенсионные": {"_file": "visa/family_retirement.md", "_children": {}},
-                "👑 Thailand Elite / Privilege": {"_file": "visa/elite_privilege.md", "_children": {}},
-                "⚙️ Полезное: TM30, Re-entry, overstay": {"_file": "visa/useful.md", "_children": {}},
+                "❓ Какая виза мне подойдёт": {"_file": "visa/which_visa.md", "_children": {}},
+                "ED — учебная": {
+                    "_file": "visa/ed/intro.md",
+                    "_children": {
+                        "Кому подходит": {"_file": "visa/ed/who_fits.md", "_children": {}},
+                        "Пошагово": {"_file": "visa/ed/steps.md", "_children": {}},
+                        "Риски и ошибки": {"_file": "visa/ed/risks.md", "_children": {}},
+                    },
+                },
+                "DTV — Digital Nomad": {
+                    "_file": "visa/dtv/intro.md",
+                    "_children": {
+                        "Кому подходит": {"_file": "visa/dtv/who_fits.md", "_children": {}},
+                        "Пошагово": {"_file": "visa/dtv/steps.md", "_children": {}},
+                        "Риски и ошибки": {"_file": "visa/dtv/risks.md", "_children": {}},
+                    },
+                },
+                "Семейная": {
+                    "_file": "visa/family/intro.md",
+                    "_children": {
+                        "Основания": {"_file": "visa/family/grounds.md", "_children": {}},
+                        "Пошагово": {"_file": "visa/family/steps.md", "_children": {}},
+                        "Риски и ошибки": {"_file": "visa/family/risks.md", "_children": {}},
+                    },
+                },
+                "Бизнес": {
+                    "_file": "visa/business/intro.md",
+                    "_children": {
+                        "Кому подходит": {"_file": "visa/business/who_fits.md", "_children": {}},
+                        "Пошагово": {"_file": "visa/business/steps.md", "_children": {}},
+                        "Риски и ошибки": {"_file": "visa/business/risks.md", "_children": {}},
+                    },
+                },
+                "Пенсионная": {
+                    "_file": "visa/retirement/intro.md",
+                    "_children": {
+                        "Требования": {"_file": "visa/retirement/requirements.md", "_children": {}},
+                        "Пошагово": {"_file": "visa/retirement/steps.md", "_children": {}},
+                        "Риски": {"_file": "visa/retirement/risks.md", "_children": {}},
+                    },
+                },
+                "Продление штампов": {
+                    "_file": "visa/extensions/intro.md",
+                    "_children": {
+                        "Где и как": {"_file": "visa/extensions/where_how.md", "_children": {}},
+                        "Сроки и штрафы": {"_file": "visa/extensions/deadlines_fines.md", "_children": {}},
+                        "Типовые ошибки": {"_file": "visa/extensions/common_mistakes.md", "_children": {}},
+                    },
+                },
             },
         },
-        "🏠 Жильё и транспорт": {
-            "_file": "housing_transport/intro.md",
+        "💸 Деньги и жильё": {
+            "_file": "money_home/intro.md",
             "_children": {
-                "🏙 Кондо / квартиры": {"_file": "housing_transport/condos.md", "_children": {}},
-                "🏡 Дома / виллы": {"_file": "housing_transport/houses_villas.md", "_children": {}},
-                "🚗 Автомобили": {"_file": "housing_transport/cars.md", "_children": {}},
-                "🛵 Байки и мотоциклы": {"_file": "housing_transport/bikes.md", "_children": {}},
-                "⚙️ Полезное по аренде": {"_file": "housing_transport/useful_rent.md", "_children": {}},
+                "💱 Обмен и деньги": {
+                    "_file": "money_home/exchange/intro.md",
+                    "_children": {
+                        "Где менять выгодно": {"_file": "money_home/exchange/where_best.md", "_children": {}},
+                        "Банки vs обменники": {"_file": "money_home/exchange/banks_vs_exchangers.md", "_children": {}},
+                        "Безопасность": {"_file": "money_home/exchange/safety.md", "_children": {}},
+                    },
+                },
+                "🏠 Аренда жилья": {
+                    "_file": "money_home/rent/intro.md",
+                    "_children": {
+                        "Депозиты и контракты": {"_file": "money_home/rent/deposits_contracts.md", "_children": {}},
+                        "Агент ≠ твой друг": {"_file": "money_home/rent/agent_not_friend.md", "_children": {}},
+                        "Типовые схемы развода": {"_file": "money_home/rent/scams.md", "_children": {}},
+                    },
+                },
+                "💳 Платежи и карты": {
+                    "_file": "money_home/payments/intro.md",
+                    "_children": {
+                        "Нал vs безнал": {"_file": "money_home/payments/cash_vs_cashless.md", "_children": {}},
+                        "Карты и блокировки": {"_file": "money_home/payments/cards_blocks.md", "_children": {}},
+                        "Что говорить банку": {"_file": "money_home/payments/talk_to_bank.md", "_children": {}},
+                    },
+                },
             },
         },
-        "💬 Как тут жить": {
-            "_file": "life/intro.md",
+        "⚠️ Реальность Таиланда": {
+            "_file": "reality/intro.md",
             "_children": {
-                "💳 Банки и деньги": {"_file": "life/banks_money.md", "_children": {}},
-                "💊 Медицина и страховка": {"_file": "life/medicine_insurance.md", "_children": {}},
-                "🏫 Школы и образование": {"_file": "life/schools_education.md", "_children": {}},
-                "📱 Связь и интернет": {"_file": "life/mobile_internet.md", "_children": {}},
-                "🍛 Быт и продукты": {"_file": "life/food_daily_life.md", "_children": {}},
-                "💼 Работа и налоги": {"_file": "life/work_taxes.md", "_children": {}},
-            },
-        },
-        "🐾 Животные и переезд": {
-            "_file": "pets_relocation/intro.md",
-            "_children": {
-                "✈️ Ввоз питомца в Таиланд": {"_file": "pets_relocation/import_pet.md", "_children": {}},
-                "📄 Документы и требования": {"_file": "pets_relocation/documents_requirements.md", "_children": {}},
-                "🏥 Ветеринария и уход": {"_file": "pets_relocation/vet_care.md", "_children": {}},
-                "🌍 Вывоз из Таиланда": {"_file": "pets_relocation/export_from_thailand.md", "_children": {}},
-                "🐈 Практические советы": {"_file": "pets_relocation/practical_tips.md", "_children": {}},
-            },
-        },
-        "⚠️ Поведение и культура": {
-            "_file": "culture/intro.md",
-            "_children": {
-                "👣 Прежде чем ты начнёшь": {"_file": "culture/before_you_start.md", "_children": {}},
-                "🙏 Тайская культура и табу": {"_file": "culture/thai_culture_taboo.md", "_children": {}},
-                "😑 Типичные ошибки фарангов": {"_file": "culture/farang_mistakes.md", "_children": {}},
-                "💡 Как вызывать уважение": {"_file": "culture/respect.md", "_children": {}},
-                "🧘 Сабай-сабай": {"_file": "culture/sabai_sabai.md", "_children": {}},
+                "🧠 Ты всегда фаранг": {
+                    "_file": "reality/farang/intro.md",
+                    "_children": {
+                        "Что это значит": {"_file": "reality/farang/what_it_means.md", "_children": {}},
+                        "Улыбки ≠ дружба": {"_file": "reality/farang/smiles_not_friendship.md", "_children": {}},
+                        "Где ошибаются чаще всего": {"_file": "reality/farang/common_errors.md", "_children": {}},
+                    },
+                },
+                "🚩 Помогаторы": {
+                    "_file": "reality/helpers/intro.md",
+                    "_children": {
+                        "Красные флаги": {"_file": "reality/helpers/red_flags.md", "_children": {}},
+                        "Типовые схемы": {"_file": "reality/helpers/schemes.md", "_children": {}},
+                        "Как отказывать": {"_file": "reality/helpers/how_to_say_no.md", "_children": {}},
+                    },
+                },
+                "😵 Типичные ошибки": {
+                    "_file": "reality/mistakes/intro.md",
+                    "_children": {
+                        "Алкоголь и агрессия": {"_file": "reality/mistakes/alcohol_aggression.md", "_children": {}},
+                        "Байк и полиция": {"_file": "reality/mistakes/bike_police.md", "_children": {}},
+                        "Нелегальная работа": {"_file": "reality/mistakes/illegal_work.md", "_children": {}},
+                    },
+                },
+                "🙏 Культура и поведение": {
+                    "_file": "reality/culture/intro.md",
+                    "_children": {
+                        "Король и религия": {"_file": "reality/culture/king_religion.md", "_children": {}},
+                        "Храмы и одежда": {"_file": "reality/culture/temples_clothes.md", "_children": {}},
+                        "Потеря лица": {"_file": "reality/culture/lose_face.md", "_children": {}},
+                    },
+                },
             },
         },
         "🆘 Нужна помощь": {
             "_file": "help/intro.md",
             "_children": {
-                "🔍 Разобрать мою ситуацию": {"_file": "help/analyze_my_case.md", "_children": {}},
+                "🆘 Разобрать мою ситуацию": {"_file": "help/analyze_my_case.md", "_children": {}},
                 "💬 Задать вопрос": {"_file": "help/ask_question.md", "_children": {}},
-                "📋 Чек-листы и гайды": {"_file": "help/checklists_guides.md", "_children": {}},
-                "❤️ Поддержать проект": {"_file": "help/support_project.md", "_children": {}},
-            },
-        },
-        "⚙️ О боте": {
-            "_file": "about/intro.md",
-            "_children": {
-                "Что такое FarangProBot": {"_file": "about/what_is_it.md", "_children": {}},
-                "Кто делает проект": {"_file": "about/author.md", "_children": {}},
-                "Обратная связь": {"_file": "about/feedback.md", "_children": {}},
-                "Поддержать проект": {"_file": "help/support_project.md", "_children": {}},
+                "📋 Чек-листы": {
+                    "_file": "help/checklists/intro.md",
+                    "_children": {
+                        "Первый месяц": {"_file": "help/checklists/first_month.md", "_children": {}},
+                        "Аренда без потерь": {"_file": "help/checklists/rent_no_losses.md", "_children": {}},
+                        "Виза без лишних расходов": {"_file": "help/checklists/visa_no_extra.md", "_children": {}},
+                    },
+                },
+                "☕ Поддержать проект": {"_file": "help/support_project.md", "_children": {}},
             },
         },
     },
@@ -365,7 +383,6 @@ ID_TO_NODE: Dict[str, Dict[str, Any]] = {}
 ID_TO_PATH: Dict[str, List[str]] = {}
 ID_TO_NAME: Dict[str, str] = {}
 PATH_TO_ID: Dict[str, str] = {}
-
 
 def assign_node_ids(node: Dict[str, Any], current_path: List[str] = None):
     global ID_COUNTER
@@ -384,11 +401,10 @@ def assign_node_ids(node: Dict[str, Any], current_path: List[str] = None):
 
         assign_node_ids(child, new_path)
 
-
 assign_node_ids(MENU_TREE)
 
 
-HELP_ANALYZE_PATH = ["🆘 Нужна помощь", "🔍 Разобрать мою ситуацию"]
+HELP_ANALYZE_PATH = ["🆘 Нужна помощь", "🆘 Разобрать мою ситуацию"]
 HELP_ANALYZE_ID = PATH_TO_ID.get(".".join(HELP_ANALYZE_PATH))
 
 
@@ -411,60 +427,25 @@ def make_breadcrumbs(path: List[str]) -> str:
     return " → ".join(parts) + "\n\n"
 
 
-def make_keyboard(
-    node: Dict[str, Any], path: List[str], user_id: Optional[int] = None
-) -> InlineKeyboardMarkup:
-    buttons: List[List[InlineKeyboardButton]] = []
-
-    # Все кнопки разделов — по одной в строке
+def make_keyboard(node: Dict[str, Any], path: List[str]) -> InlineKeyboardMarkup:
+    buttons = []
     for name in node.get("_children", {}):
         full_path_key = ".".join(path + [name])
         node_id = PATH_TO_ID.get(full_path_key)
         if node_id:
-            buttons.append([
-                InlineKeyboardButton(name, callback_data=f"nav:{node_id}")
-            ])
+            buttons.append([InlineKeyboardButton(name, callback_data=f"nav:{node_id}")])
 
-    # Кнопка помощи в важных разделах (обновлённый список)
-    important = [
-        "📄 Виза и легализация",
-        "🏠 Жильё и транспорт",
-        "💬 Как тут жить",
-        "🐾 Животные и переезд",
-        "⚠️ Поведение и культура",
-    ]
+    # Кнопка помощи в важных разделах
+    important = ["📄 Виза и легализация", "💸 Деньги и жильё", "⚠️ Реальность Таиланда"]
     if path and (path[0] in important or any(s in path for s in important)):
         if HELP_ANALYZE_ID:
-            buttons.append([
-                InlineKeyboardButton("🆘 Разобрать мою ситуацию", callback_data=f"nav:{HELP_ANALYZE_ID}")
-            ])
+            buttons.append([InlineKeyboardButton("🆘 Разобрать мою ситуацию", callback_data=f"nav:{HELP_ANALYZE_ID}")])
 
-    # Умное избранное
-    if path and user_id:
-        full_path_key = ".".join(path)
-        node_id = PATH_TO_ID.get(full_path_key)
-        if node_id:
-            if is_favorite(user_id, node_id):
-                buttons.append([
-                    InlineKeyboardButton("🗑 Удалить из избранного", callback_data="action:unfav")
-                ])
-            else:
-                buttons.append([
-                    InlineKeyboardButton("⭐ В избранное", callback_data="action:fav")
-                ])
-    elif path:
-        buttons.append([
-            InlineKeyboardButton("⭐ В избранное", callback_data="action:fav")
-        ])
+    # Кнопка избранного
+    if path:
+        buttons.append([InlineKeyboardButton("⭐ В избранное", callback_data="action:fav")])
 
-    # Быстрые кнопки в главном меню
-    if not path:
-        buttons.append([
-            InlineKeyboardButton("🔍 Поиск", callback_data="action:search_info"),
-            InlineKeyboardButton("⭐ Избранное", callback_data="action:show_favs")
-        ])
-
-    # Навигация
+    # Навигационные кнопки только если пользователь не в главном меню
     if path:
         nav_row = [
             InlineKeyboardButton("⬅️ Назад", callback_data="action:back"),
@@ -482,24 +463,14 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, edit: bo
         node = get_node_by_path(path) or MENU_TREE
         breadcrumbs = make_breadcrumbs(path)
         text = breadcrumbs + get_text(node)
+        keyboard = make_keyboard(node, path)
 
-        user_id = update.effective_user.id if update and update.effective_user else None
-        keyboard = make_keyboard(node, path, user_id)
-
-        if edit and update and update.callback_query:
-            await update.callback_query.edit_message_text(
-                text=text, reply_markup=keyboard, disable_web_page_preview=True
-            )
+        if edit and update.callback_query:
+            await update.callback_query.edit_message_text(text=text, reply_markup=keyboard, disable_web_page_preview=True)
         else:
-            await update.effective_message.reply_text(
-                text=text, reply_markup=keyboard, disable_web_page_preview=True
-            )
+            await update.effective_message.reply_text(text=text, reply_markup=keyboard, disable_web_page_preview=True)
     except Exception as e:
         logger.error(f"show_menu error: {e}", exc_info=True)
-        if update and update.callback_query:
-            await update.callback_query.answer(
-                "Произошла временная ошибка. Попробуйте /start", show_alert=True
-            )
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -546,39 +517,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     added = add_to_favorites(user.id, node_id, section_name)
                     msg = "⭐ Добавлено в избранное" if added else "⭐ Уже есть в избранном"
                     await query.answer(msg, show_alert=True)
-                    await show_menu(update, context, edit=True)
-            return
-
-        if data == "action:unfav":
-            if path:
-                full_path_key = ".".join(path)
-                node_id = PATH_TO_ID.get(full_path_key)
-                if node_id:
-                    removed = remove_from_favorites(user.id, node_id)
-                    msg = "🗑 Удалено из избранного" if removed else "🗑 Не было в избранном"
-                    await query.answer(msg, show_alert=True)
-                    await show_menu(update, context, edit=True)
-            return
-
-        if data == "action:show_favs":
-            favs = get_user_favorites(user.id)
-            if not favs:
-                await query.answer("У вас пока нет избранных разделов.", show_alert=True)
-                return
-            keyboard = [
-                [InlineKeyboardButton(name, callback_data=f"nav:{nid}")] for nid, name in favs
-            ]
-            await query.edit_message_text(
-                "⭐ Ваше избранное:\n\nВыберите раздел для перехода:",
-                reply_markup=InlineKeyboardMarkup(keyboard)
-            )
-            return
-
-        if data == "action:search_info":
-            await query.answer(
-                "Для поиска используй команду:\n/search ваш запрос\n\nПример: /search виза DTV",
-                show_alert=True
-            )
             return
 
         if data.startswith("nav:"):
@@ -597,8 +535,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await show_menu(update, context, edit=True)
                 return
 
-        logger.warning(f"Unknown callback data: {data}")
-        await query.answer("Неизвестная команда. Используйте /start", show_alert=True)
+        await query.edit_message_text("Ошибка навигации.")
 
     except Exception as e:
         logger.error(f"button_handler error: {e}", exc_info=True)
@@ -623,12 +560,8 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.effective_message.reply_text("Ничего не найдено.")
             return
 
-        keyboard = [
-            [InlineKeyboardButton(name, callback_data=f"nav:{nid}")] for nid, name in results[:15]
-        ]
-        await update.effective_message.reply_text(
-            "Результаты поиска:", reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+        keyboard = [[InlineKeyboardButton(name, callback_data=f"nav:{nid}")] for nid, name in results[:15]]
+        await update.effective_message.reply_text("Результаты поиска:", reply_markup=InlineKeyboardMarkup(keyboard))
     except Exception as e:
         logger.error(f"search_command error: {e}", exc_info=True)
 
@@ -640,32 +573,10 @@ async def favorites_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.effective_message.reply_text("У вас пока нет избранных разделов.")
             return
 
-        keyboard = [
-            [InlineKeyboardButton(name, callback_data=f"nav:{nid}")] for nid, name in favs
-        ]
-        await update.effective_message.reply_text(
-            "⭐ Ваше избранное:", reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+        keyboard = [[InlineKeyboardButton(name, callback_data=f"nav:{nid}")] for nid, name in favs]
+        await update.effective_message.reply_text("⭐ Ваше избранное:", reply_markup=InlineKeyboardMarkup(keyboard))
     except Exception as e:
         logger.error(f"favorites_command error: {e}", exc_info=True)
-
-
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        text = (
-            "Farang Pro — практичный гид по реальной жизни в Таиланде.\n\n"
-            "📌 Доступные команды:\n"
-            "/start — главное меню\n"
-            "/search <текст> — поиск по разделам\n"
-            "/favorites — ваше избранное\n"
-            "/help — эта справка\n\n"
-            "В главном меню есть быстрые кнопки «🔍 Поиск» и «⭐ Избранное».\n"
-            "Добавляй важные разделы в избранное — потом быстро возвращайся.\n\n"
-            "Мы за трезвый взгляд и реальные действия. Без иллюзий и кликбейта."
-        )
-        await update.effective_message.reply_text(text)
-    except Exception as e:
-        logger.error(f"help_command error: {e}", exc_info=True)
 
 
 async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -721,9 +632,9 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 
 # ==================== ЗАПУСК ====================
 def main():
-    token = os.getenv("BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    token = os.getenv("BOT_TOKEN", "").strip()
     if not token:
-        raise RuntimeError("BOT_TOKEN / TELEGRAM_BOT_TOKEN не найден!")
+        raise RuntimeError("BOT_TOKEN не найден!")
 
     app = Application.builder().token(token).build()
 
@@ -731,11 +642,10 @@ def main():
     app.add_handler(CommandHandler("admin", admin_command))
     app.add_handler(CommandHandler("search", search_command))
     app.add_handler(CommandHandler("favorites", favorites_command))
-    app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
-    logger.info("FarangProBot v1.2 запущен (новая структура меню + важные разделы)")
+    logger.info("FarangProBot запущен")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
