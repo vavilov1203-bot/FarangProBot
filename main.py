@@ -1,6 +1,7 @@
 import os
 import logging
 import sqlite3
+import hashlib
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
@@ -237,7 +238,7 @@ def get_recent_visits(limit: int = 12) -> List[tuple]:
 init_db()
 
 
-# ==================== КЭШ ====================
+# ==================== КЭШ И ЗАГРУЗКА КОНТЕНТА ====================
 _content_cache: Dict[str, str] = {}
 
 
@@ -271,7 +272,7 @@ def get_text(node: Dict[str, Any]) -> str:
     return "Раздел находится в разработке."
 
 
-# ==================== МЕНЮ ====================
+# ==================== МЕНЮ (без изменений) ====================
 MENU_TREE: Dict[str, Any] = {
     "_text": "Выбери пункт из меню 👇",
     "_children": {
@@ -360,8 +361,12 @@ MENU_TREE: Dict[str, Any] = {
 }
 
 
-# ==================== ID СИСТЕМА ====================
-ID_COUNTER = 0
+# ==================== СТАБИЛЬНАЯ СИСТЕМА ID ====================
+def get_stable_node_id(path: List[str]) -> str:
+    path_str = ".".join(path)
+    return "m" + hashlib.md5(path_str.encode('utf-8')).hexdigest()[:8]
+
+
 ID_TO_NODE: Dict[str, Dict[str, Any]] = {}
 ID_TO_PATH: Dict[str, List[str]] = {}
 ID_TO_NAME: Dict[str, str] = {}
@@ -369,14 +374,12 @@ PATH_TO_ID: Dict[str, str] = {}
 
 
 def assign_node_ids(node: Dict[str, Any], current_path: List[str] = None):
-    global ID_COUNTER
     if current_path is None:
         current_path = []
 
     for name, child in node.get("_children", {}).items():
         new_path = current_path + [name]
-        node_id = f"m{ID_COUNTER:03d}"
-        ID_COUNTER += 1
+        node_id = get_stable_node_id(new_path)
 
         ID_TO_NODE[node_id] = child
         ID_TO_PATH[node_id] = new_path
@@ -387,6 +390,12 @@ def assign_node_ids(node: Dict[str, Any], current_path: List[str] = None):
 
 
 assign_node_ids(MENU_TREE)
+
+# Логирование ID для отладки
+logger.info("=== Stable ID mapping (первые 15) ===")
+for i, (nid, pth) in enumerate(list(ID_TO_PATH.items())[:15]):
+    logger.info(f"{nid} -> {pth}")
+logger.info("=== Конец маппинга ID ===")
 
 
 HELP_ANALYZE_PATH = ["🆘 Нужна помощь", "🔍 Разобрать мою ситуацию"]
@@ -720,7 +729,7 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         text = "Неизвестная команда"
 
-    await update.effective_message.reply_text(text, reply_markup=query.message.reply_markup)
+    await update.effective_message.reply_text(text)
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
@@ -743,7 +752,7 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
-    logger.info("FarangProBot v2.0 запущен (только reply_text, без редактирования)")
+    logger.info("FarangProBot v4.0 запущен (только reply_text + стабильные path-based ID)")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
