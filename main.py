@@ -248,7 +248,8 @@ def content_path(relative_path: str) -> str:
 def load_content(path: str) -> str:
     try:
         with open(path, "r", encoding="utf-8") as file:
-            return file.read()
+            content = file.read()
+            return content if content.strip() else "Раздел находится в разработке."
     except FileNotFoundError:
         logger.warning(f"Файл не найден: {path}")
         return "Раздел находится в разработке."
@@ -270,7 +271,7 @@ def get_text(node: Dict[str, Any]) -> str:
     return "Раздел находится в разработке."
 
 
-# ==================== МЕНЮ ====================
+# ==================== МЕНЮ (оставлено без изменений) ====================
 MENU_TREE: Dict[str, Any] = {
     "_text": "Выбери пункт из меню 👇",
     "_children": {
@@ -478,23 +479,31 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, edit: bo
         breadcrumbs = make_breadcrumbs(path)
         text = breadcrumbs + get_text(node)
 
+        if len(text) > 3900:
+            text = text[:3900] + "\n\n…"
+
         user_id = update.effective_user.id if update and update.effective_user else None
         keyboard = make_keyboard(node, path, user_id)
 
         if edit and update and update.callback_query:
-            await update.callback_query.edit_message_text(
-                text=text, reply_markup=keyboard, disable_web_page_preview=True
-            )
+            try:
+                await update.callback_query.edit_message_text(
+                    text=text, reply_markup=keyboard, disable_web_page_preview=True
+                )
+            except Exception as e:
+                if "Message is not modified" in str(e):
+                    try:
+                        await update.callback_query.answer("Вы уже в этом разделе")
+                    except:
+                        pass
+                else:
+                    logger.error(f"edit_message_text error: {e}")
         else:
             await update.effective_message.reply_text(
                 text=text, reply_markup=keyboard, disable_web_page_preview=True
             )
     except Exception as e:
         logger.error(f"show_menu error: {e}", exc_info=True)
-        if update and update.callback_query:
-            await update.callback_query.answer(
-                "Произошла временная ошибка. Попробуйте /start", show_alert=True
-            )
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -516,22 +525,23 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         query = update.callback_query
         data = query.data or ""
+        logger.info(f"Callback data: {data}")
+
         path: List[str] = context.user_data.get("path", [])
         user = update.effective_user
 
-        # === Обработка админ-кнопок (добавлено) ===
         if data.startswith("admin:"):
             await admin_callback(update, context)
             return
 
-        await query.answer()
-
         if data == "action:home":
+            await query.answer()
             context.user_data["path"] = []
             await show_menu(update, context, edit=True)
             return
 
         if data == "action:back":
+            await query.answer()
             if path:
                 path.pop()
             context.user_data["path"] = path
@@ -586,19 +596,26 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             node_id = data[4:]
             if node_id in ID_TO_PATH:
                 new_path = ID_TO_PATH[node_id]
-                context.user_data["path"] = new_path
-                section_name = ID_TO_NAME.get(node_id, "")
-
-                try:
-                    increment_stat(section_name)
-                    log_user_visit(user.id, user.username, section_name)
-                except Exception:
-                    pass
-
-                await show_menu(update, context, edit=True)
+                node = get_node_by_path(new_path)
+                if node is not None:
+                    context.user_data["path"] = new_path
+                    section_name = ID_TO_NAME.get(node_id, "")
+                    logger.info(f"Opening path: {new_path}")
+                    try:
+                        increment_stat(section_name)
+                        log_user_visit(user.id, user.username, section_name)
+                    except Exception:
+                        pass
+                    await query.answer()
+                    await show_menu(update, context, edit=True)
+                    return
+                else:
+                    await query.answer("Раздел временно недоступен. Нажмите /start", show_alert=True)
+                    return
+            else:
+                await query.answer("Раздел временно недоступен. Нажмите /start", show_alert=True)
                 return
 
-        logger.warning(f"Unknown callback data: {data}")
         await query.answer("Неизвестная команда. Используйте /start", show_alert=True)
 
     except Exception as e:
@@ -688,7 +705,10 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     admin_id = os.getenv("ADMIN_USER_ID")
     if not admin_id or str(update.effective_user.id) != admin_id:
-        await update.callback_query.edit_message_text("⛔ Доступ запрещён.")
+        try:
+            await update.callback_query.answer("⛔ Доступ запрещён.", show_alert=True)
+        except:
+            pass
         return
 
     query = update.callback_query
@@ -697,23 +717,27 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data == "admin:stats":
         stats = get_stats("all")
-        text = "📊 Общая статистика\n\n" + "\n".join([f"• {s}: {c}" for s, c in stats[:15]])
+        text = "📊 Общая статистика\n\n" + ("\n".join([f"• {s}: {c}" for s, c in stats[:15]]) if stats else "Пока нет данных.")
     elif data == "admin:today":
         stats = get_stats("today")
-        text = "📅 Статистика за сегодня\n\n" + "\n".join([f"• {s}: {c}" for s, c in stats])
+        text = "📅 Статистика за сегодня\n\n" + ("\n".join([f"• {s}: {c}" for s, c in stats]) if stats else "Пока нет данных.")
     elif data == "admin:week":
         stats = get_stats("week")
-        text = "📆 Статистика за неделю\n\n" + "\n".join([f"• {s}: {c}" for s, c in stats])
+        text = "📆 Статистика за неделю\n\n" + ("\n".join([f"• {s}: {c}" for s, c in stats]) if stats else "Пока нет данных.")
     elif data == "admin:users":
         users = get_top_users(15)
-        text = "👥 Топ пользователей\n\n" + "\n".join([f"• {u} — {c} посещений" for u, c in users])
+        text = "👥 Топ пользователей\n\n" + ("\n".join([f"• {u} — {c} посещений" for u, c in users]) if users else "Пока нет данных.")
     elif data == "admin:recent":
         visits = get_recent_visits(12)
-        text = "🕒 Последние посещения\n\n" + "\n".join([f"• {u} → {s}" for u, s, _ in visits])
+        text = "🕒 Последние посещения\n\n" + ("\n".join([f"• {u} → {s}" for u, s, _ in visits]) if visits else "Пока нет данных.")
     else:
         text = "Неизвестная команда"
 
-    await query.edit_message_text(text, reply_markup=query.message.reply_markup)
+    try:
+        await query.edit_message_text(text, reply_markup=query.message.reply_markup)
+    except Exception as e:
+        if "Message is not modified" not in str(e):
+            logger.error(f"admin edit error: {e}")
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
@@ -722,7 +746,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 
 # ==================== ЗАПУСК ====================
 def main():
-    token = os.getenv("BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    token = (os.getenv("BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN") or "").strip()
     if not token:
         raise RuntimeError("BOT_TOKEN / TELEGRAM_BOT_TOKEN не найден!")
 
@@ -736,7 +760,7 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
-    logger.info("FarangProBot v1.2 запущен (исправлена админ-панель)")
+    logger.info("FarangProBot запущен (технические исправления)")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
