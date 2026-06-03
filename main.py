@@ -488,27 +488,42 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, edit: bo
         if edit and update and update.callback_query:
             try:
                 await update.callback_query.edit_message_text(
-                    text=text, reply_markup=keyboard, disable_web_page_preview=True
+                    text=text,
+                    reply_markup=keyboard,
+                    disable_web_page_preview=True
                 )
+                return
+
             except Exception as e:
                 error_text = str(e)
+
                 if "Message is not modified" in error_text:
                     try:
                         await update.callback_query.answer("Вы уже в этом разделе")
-                    except:
+                    except Exception:
                         pass
-                else:
-                    logger.error(f"edit_message_text error: {e}")
-                    try:
-                        await update.effective_message.reply_text(
-                            text=text, reply_markup=keyboard, disable_web_page_preview=True
-                        )
-                    except Exception as e2:
-                        logger.error(f"reply_text fallback error: {e2}")
+                    return
+
+                logger.error(f"edit_message_text failed: {e}", exc_info=True)
+
+                try:
+                    await update.callback_query.message.reply_text(
+                        text=text,
+                        reply_markup=keyboard,
+                        disable_web_page_preview=True
+                    )
+                    return
+
+                except Exception as e2:
+                    logger.error(f"reply_text fallback failed: {e2}", exc_info=True)
+                    return
         else:
             await update.effective_message.reply_text(
-                text=text, reply_markup=keyboard, disable_web_page_preview=True
+                text=text,
+                reply_markup=keyboard,
+                disable_web_page_preview=True
             )
+            return
     except Exception as e:
         logger.error(f"show_menu error: {e}", exc_info=True)
 
@@ -532,8 +547,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         query = update.callback_query
         data = query.data or ""
-        old_path = context.user_data.get("path", [])
-        logger.info(f"Callback data: {data} | old_path: {old_path}")
+        logger.info(f"Callback data: {data}")
 
         path: List[str] = context.user_data.get("path", [])
         user = update.effective_user
@@ -608,7 +622,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 if node is not None:
                     context.user_data["path"] = new_path
                     section_name = ID_TO_NAME.get(node_id, "")
-                    logger.info(f"Opening path: {new_path} | node_id: {node_id} | section: {section_name}")
+                    logger.info(f"Opening path: {new_path} | node_id: {node_id}")
                     try:
                         increment_stat(section_name)
                         log_user_visit(user.id, user.username, section_name)
@@ -773,7 +787,7 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
-    logger.info("FarangProBot v1.4 запущен (стабилизированная версия)")
+    logger.info("FarangProBot v1.5 запущен (исправлен edit_message_text)")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
