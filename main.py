@@ -611,7 +611,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
 
             new_path = ID_TO_PATH.get(node_id)
-            logger.info(f"NAV_CLICK node_id={node_id} nou_path={new_path}")
+            logger.info(f"NAV_CLICK node_id={node_id} new_path={new_path}")
 
             if not new_path:
                 await query.answer("Раздел устарел. Нажмите /start", show_alert=True)
@@ -761,25 +761,13 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     logger.error("Глобальная ошибка:", exc_info=context.error)
 
 
-# ==================== post_init ====================
-async def post_init(application: Application) -> None:
-    await application.bot.delete_webhook(drop_pending_updates=True)
-    logger.info("Старый webhook удалён, pending updates сброшены")
-
-
 # ==================== ЗАПУСК ====================
 def main():
     token = (os.getenv("BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN") or "").strip()
     if not token:
         raise RuntimeError("BOT_TOKEN / TELEGRAM_BOT_TOKEN не найден!")
 
-    # Создаём приложение с post_init через builder
-    app = (
-        Application.builder()
-        .token(token)
-        .post_init(post_init)
-        .build()
-    )
+    app = Application.builder().token(token).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("admin", admin_command))
@@ -789,7 +777,7 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
-    logger.info("FarangProBot v6.2 запущен (Render Web Service + Webhook)")
+    logger.info("FarangProBot v6.3 запущен (Render Web Service + Webhook)")
 
     port = int(os.environ.get("PORT", "10000"))
     webhook_url = os.environ.get("WEBHOOK_URL")
