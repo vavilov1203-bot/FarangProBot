@@ -271,7 +271,7 @@ def get_text(node: Dict[str, Any]) -> str:
     return "Раздел находится в разработке."
 
 
-# ==================== МЕНЮ (без изменений) ====================
+# ==================== МЕНЮ ====================
 MENU_TREE: Dict[str, Any] = {
     "_text": "Выбери пункт из меню 👇",
     "_children": {
@@ -472,7 +472,7 @@ def make_keyboard(
 
 
 # ==================== ОБРАБОТЧИКИ ====================
-async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, edit: bool = False):
+async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         path: List[str] = context.user_data.get("path", [])
         node = get_node_by_path(path) or MENU_TREE
@@ -485,45 +485,11 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, edit: bo
         user_id = update.effective_user.id if update and update.effective_user else None
         keyboard = make_keyboard(node, path, user_id)
 
-        if edit and update and update.callback_query:
-            try:
-                await update.callback_query.edit_message_text(
-                    text=text,
-                    reply_markup=keyboard,
-                    disable_web_page_preview=True
-                )
-                return
-
-            except Exception as e:
-                error_text = str(e)
-
-                if "Message is not modified" in error_text:
-                    try:
-                        await update.callback_query.answer("Вы уже в этом разделе")
-                    except Exception:
-                        pass
-                    return
-
-                logger.error(f"edit_message_text failed: {e}", exc_info=True)
-
-                try:
-                    await update.callback_query.message.reply_text(
-                        text=text,
-                        reply_markup=keyboard,
-                        disable_web_page_preview=True
-                    )
-                    return
-
-                except Exception as e2:
-                    logger.error(f"reply_text fallback failed: {e2}", exc_info=True)
-                    return
-        else:
-            await update.effective_message.reply_text(
-                text=text,
-                reply_markup=keyboard,
-                disable_web_page_preview=True
-            )
-            return
+        await update.effective_message.reply_text(
+            text=text,
+            reply_markup=keyboard,
+            disable_web_page_preview=True
+        )
     except Exception as e:
         logger.error(f"show_menu error: {e}", exc_info=True)
 
@@ -556,18 +522,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await admin_callback(update, context)
             return
 
+        await query.answer()
+
         if data == "action:home":
-            await query.answer()
             context.user_data["path"] = []
-            await show_menu(update, context, edit=True)
+            await show_menu(update, context)
             return
 
         if data == "action:back":
-            await query.answer()
             if path:
                 path.pop()
             context.user_data["path"] = path
-            await show_menu(update, context, edit=True)
+            await show_menu(update, context)
             return
 
         if data == "action:fav":
@@ -579,7 +545,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     added = add_to_favorites(user.id, node_id, section_name)
                     msg = "⭐ Добавлено в избранное" if added else "⭐ Уже есть в избранном"
                     await query.answer(msg, show_alert=True)
-                    await show_menu(update, context, edit=True)
+                    await show_menu(update, context)
             return
 
         if data == "action:unfav":
@@ -590,7 +556,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     removed = remove_from_favorites(user.id, node_id)
                     msg = "🗑 Удалено из избранного" if removed else "🗑 Не было в избранном"
                     await query.answer(msg, show_alert=True)
-                    await show_menu(update, context, edit=True)
+                    await show_menu(update, context)
             return
 
         if data == "action:show_favs":
@@ -601,7 +567,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard = [
                 [InlineKeyboardButton(name, callback_data=f"nav:{nid}")] for nid, name in favs
             ]
-            await query.edit_message_text(
+            await update.effective_message.reply_text(
                 "⭐ Ваше избранное:\n\nВыберите раздел для перехода:",
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
@@ -628,8 +594,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         log_user_visit(user.id, user.username, section_name)
                     except Exception:
                         pass
-                    await query.answer()
-                    await show_menu(update, context, edit=True)
+                    await show_menu(update, context)
                     return
                 else:
                     await query.answer("Раздел обновился. Нажмите /start", show_alert=True)
@@ -755,16 +720,7 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         text = "Неизвестная команда"
 
-    try:
-        await query.edit_message_text(text, reply_markup=query.message.reply_markup)
-    except Exception as e:
-        if "Message is not modified" in str(e):
-            try:
-                await query.answer("Вы уже в этом разделе")
-            except:
-                pass
-        else:
-            logger.error(f"admin_callback edit error: {e}")
+    await update.effective_message.reply_text(text, reply_markup=query.message.reply_markup)
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
@@ -787,7 +743,7 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
-    logger.info("FarangProBot v1.5 запущен (исправлен edit_message_text)")
+    logger.info("FarangProBot v2.0 запущен (только reply_text, без редактирования)")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
