@@ -416,7 +416,6 @@ def make_keyboard(
 ) -> InlineKeyboardMarkup:
     buttons: List[List[InlineKeyboardButton]] = []
 
-    # Все кнопки разделов — по одной в строке
     for name in node.get("_children", {}):
         full_path_key = ".".join(path + [name])
         node_id = PATH_TO_ID.get(full_path_key)
@@ -425,7 +424,6 @@ def make_keyboard(
                 InlineKeyboardButton(name, callback_data=f"nav:{node_id}")
             ])
 
-    # Кнопка помощи в важных разделах (обновлённый список)
     important = [
         "📄 Виза и легализация",
         "🏠 Жильё и транспорт",
@@ -439,7 +437,6 @@ def make_keyboard(
                 InlineKeyboardButton("🆘 Разобрать мою ситуацию", callback_data=f"nav:{HELP_ANALYZE_ID}")
             ])
 
-    # Умное избранное
     if path and user_id:
         full_path_key = ".".join(path)
         node_id = PATH_TO_ID.get(full_path_key)
@@ -457,14 +454,12 @@ def make_keyboard(
             InlineKeyboardButton("⭐ В избранное", callback_data="action:fav")
         ])
 
-    # Быстрые кнопки в главном меню
     if not path:
         buttons.append([
             InlineKeyboardButton("🔍 Поиск", callback_data="action:search_info"),
             InlineKeyboardButton("⭐ Избранное", callback_data="action:show_favs")
         ])
 
-    # Навигация
     if path:
         nav_row = [
             InlineKeyboardButton("⬅️ Назад", callback_data="action:back"),
@@ -520,10 +515,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         query = update.callback_query
-        await query.answer()
         data = query.data or ""
         path: List[str] = context.user_data.get("path", [])
         user = update.effective_user
+
+        # === Обработка админ-кнопок (добавлено) ===
+        if data.startswith("admin:"):
+            await admin_callback(update, context)
+            return
+
+        await query.answer()
 
         if data == "action:home":
             context.user_data["path"] = []
@@ -735,7 +736,7 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
-    logger.info("FarangProBot v1.2 запущен (новая структура меню + важные разделы)")
+    logger.info("FarangProBot v1.2 запущен (исправлена админ-панель)")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
