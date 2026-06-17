@@ -1,7 +1,7 @@
 # Аудит контента FarangProBot
 
-Последнее обновление: 2026-06-18 (фактчекинг и исправление ошибок)  
-Статусы: **READY** — готово | **NEEDS_UPDATE** — нужна актуализация | **STUB** — заглушка | **DUPLICATE** — дублирует другой файл
+Последнее обновление: 2026-06-18 (заполнены все stub-файлы)  
+Статусы: **READY** — готово | **DRAFT_READY_FOR_REVIEW** — заполнено, ждёт проверки Дмитрием | **NEEDS_UPDATE** — нужна актуализация | **STUB** — заглушка | **DUPLICATE** — дублирует другой файл
 
 ---
 
@@ -29,7 +29,7 @@
 | urgent/thailand_not_paradise.md | READY | ✅ | Нет | — | Добавлен в v5 |
 | urgent/first_day_checklist.md | READY | ✅ | Нет | — | |
 | urgent/top5_mistakes.md | READY | ✅ | Нет | — | |
-| urgent/family_pets.md | STUB | ✅ | Нет | Средний | Нужен краткий текст про переезд с семьёй |
+| urgent/family_pets.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026: дети, документы, школы, питомцы |
 | urgent/money_do_dont.md | STUB | ❌ | Нет | Низкий | Не подключён, позже можно добавить |
 | urgent/rent_deposit.md | STUB | ❌ | Нет | Низкий | Не подключён |
 | urgent/visa_risks.md | STUB | ❌ | Нет | Низкий | Не подключён |
@@ -42,9 +42,9 @@
 
 | Файл | Статус | В меню | Интернет-проверка | Приоритет | Комментарий |
 |------|--------|--------|-------------------|-----------|-------------|
-| visa/intro.md | STUB | ✅ | ✅ Обязательно | Высокий | Нужен навигационный текст с кратким описанием видов виз |
+| visa/intro.md | DRAFT_READY_FOR_REVIEW | ✅ | ✅ Обязательно | Высокий | Заполнено июнь 2026: навигация по всем типам виз |
 | visa/tourist.md | READY | ✅ | ✅ Июнь 2026 | — | Заполнено: безвизовый въезд, TR, re-entry, TDAC |
-| visa/elite_privilege.md | STUB | ✅ | ✅ Обязательно | Средний | Программа Thailand Privilege (бывш. Elite) |
+| visa/elite_privilege.md | DRAFT_READY_FOR_REVIEW | ✅ | ✅ Обязательно | Средний | Заполнено июнь 2026: типы карт, что даёт/не даёт. Цены требуют проверки на сайте |
 | visa/ed/intro.md | READY | ✅ | ✅ Июнь 2026 | — | |
 | visa/ed/who_fits.md | READY | ✅ | ✅ Июнь 2026 | — | |
 | visa/ed/steps.md | READY | ✅ | ✅ Июнь 2026 | — | |
@@ -107,8 +107,8 @@
 | housing_transport/intro.md | READY | ✅ | ✅ Июнь 2026 | — | Типы жилья, транспорт, ориентировочные цены |
 | housing_transport/condos.md | READY | ✅ | ✅ Июнь 2026 | — | DDProperty, чек-лист перед подписанием |
 | housing_transport/houses_villas.md | READY | ✅ | ✅ Июнь 2026 | — | |
-| housing_transport/cars.md | STUB | ✅ | ✅ Желательно | Средний | Права, страховка |
-| housing_transport/bikes.md | STUB | ✅ | ✅ Желательно | Высокий | Байк — тема безопасности |
+| housing_transport/cars.md | DRAFT_READY_FOR_REVIEW | ✅ | ✅ Желательно | Средний | Заполнено июнь 2026: права, аренда, страховка классов 1-3, ДТП, покупка |
+| housing_transport/bikes.md | DRAFT_READY_FOR_REVIEW | ✅ | ✅ Желательно | Высокий | Заполнено июнь 2026: права кат.A, шлем, аренда, страховка, полиция, ДТП |
 | housing_transport/useful_rent.md | READY | ✅ | ✅ Июнь 2026 | — | Чек-листы при заезде/выезде |
 
 ---
@@ -119,11 +119,11 @@
 
 | Файл | Статус | В меню | Интернет-проверка | Приоритет | Комментарий |
 |------|--------|--------|-------------------|-----------|-------------|
-| life/intro.md | STUB | ✅ | Нет | Средний | |
+| life/intro.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026: навигационный текст раздела |
 | life/medicine_insurance.md | READY | ✅ | ✅ Июнь 2026 | — | Гос/частные клиники, страховки, экстренная помощь |
-| life/schools_education.md | STUB | ✅ | ✅ Желательно | Средний | |
-| life/mobile_internet.md | STUB | ✅ | Нет | Средний | |
-| life/food_daily_life.md | STUB | ✅ | Нет | Низкий | |
+| life/schools_education.md | DRAFT_READY_FOR_REVIEW | ✅ | ✅ Желательно | Средний | Заполнено июнь 2026: международные школы, EP, онлайн, ED-виза для ребёнка |
+| life/mobile_internet.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026: AIS/True, eSIM, домашний интернет, пополнение |
+| life/food_daily_life.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Низкий | Заполнено июнь 2026: рынки, супермаркеты, вода, доставка, быт |
 | life/work_taxes.md | READY | ✅ | ✅ Июнь 2026 | — | Work Permit, ставки налогов, правило 180 дней. Добавлен Por. 161/2566 |
 | life/banks_money.md | DUPLICATE | ❌ | — | — | Заменён разделом money_home/ |
 
@@ -148,23 +148,23 @@
 
 | Файл | Статус | В меню | Интернет-проверка | Приоритет | Комментарий |
 |------|--------|--------|-------------------|-----------|-------------|
-| reality/intro.md | STUB | ✅ | Нет | Средний | |
-| reality/farang/intro.md | STUB | ✅ | Нет | Средний | |
-| reality/farang/what_it_means.md | STUB | ✅ | Нет | Средний | |
-| reality/farang/smiles_not_friendship.md | STUB | ✅ | Нет | Средний | |
-| reality/farang/common_errors.md | STUB | ✅ | Нет | Высокий | |
-| reality/helpers/intro.md | STUB | ✅ | Нет | Средний | |
-| reality/helpers/red_flags.md | STUB | ✅ | Нет | Высокий | |
-| reality/helpers/schemes.md | STUB | ✅ | Нет | Высокий | Схемы мошенников |
-| reality/helpers/how_to_say_no.md | STUB | ✅ | Нет | Средний | |
-| reality/mistakes/intro.md | STUB | ✅ | Нет | Средний | |
-| reality/mistakes/alcohol_aggression.md | STUB | ✅ | Нет | Средний | |
-| reality/mistakes/bike_police.md | STUB | ✅ | ✅ Желательно | Высокий | Штрафы, права — могут меняться |
-| reality/mistakes/illegal_work.md | STUB | ✅ | ✅ Желательно | Высокий | |
-| reality/culture/intro.md | STUB | ✅ | Нет | Средний | |
-| reality/culture/king_religion.md | STUB | ✅ | Нет | Высокий | Закон о lèse-majesté — важно |
-| reality/culture/temples_clothes.md | STUB | ✅ | Нет | Средний | |
-| reality/culture/lose_face.md | STUB | ✅ | Нет | Средний | |
+| reality/intro.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026 |
+| reality/farang/intro.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026 |
+| reality/farang/what_it_means.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026: двойные цены, ограничения для иностранцев |
+| reality/farang/smiles_not_friendship.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026: крэнгджай, улыбка, коммуникация |
+| reality/farang/common_errors.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Высокий | Заполнено июнь 2026: 10 типичных ошибок |
+| reality/helpers/intro.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026 |
+| reality/helpers/red_flags.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Высокий | Заполнено июнь 2026: 6 красных флагов |
+| reality/helpers/schemes.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Высокий | Заполнено июнь 2026: 7 схем мошенничества |
+| reality/helpers/how_to_say_no.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026: "Mai ao", техники отказа |
+| reality/mistakes/intro.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026 |
+| reality/mistakes/alcohol_aggression.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026: конфликты, дни запрета алкоголя |
+| reality/mistakes/bike_police.md | DRAFT_READY_FOR_REVIEW | ✅ | ✅ Желательно | Высокий | Заполнено июнь 2026: права кат.A, шлем, посты, ДТП |
+| reality/mistakes/illegal_work.md | DRAFT_READY_FOR_REVIEW | ✅ | ✅ Желательно | Высокий | Заполнено июнь 2026: WP, DTV-исключение, 51 профессия |
+| reality/culture/intro.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026 |
+| reality/culture/king_religion.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Высокий | Заполнено июнь 2026: ст.112 УК, монахи, гимн |
+| reality/culture/temples_clothes.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026: храмы, одежда, голова/ноги |
+| reality/culture/lose_face.md | DRAFT_READY_FOR_REVIEW | ✅ | Нет | Средний | Заполнено июнь 2026: крэнгджай, потеря лица, практика |
 
 ---
 
@@ -188,14 +188,14 @@
 
 | Файл | Статус | В меню | Приоритет | Комментарий |
 |------|--------|--------|-----------|-------------|
-| help/intro.md | STUB | ✅ | Средний | |
-| help/analyze_my_case.md | STUB | ✅ | Высокий | Ключевой раздел — нужен реальный контент |
-| help/ask_question.md | STUB | ✅ | Высокий | Должна быть ссылка/контакт |
-| help/checklists/intro.md | STUB | ✅ | Средний | |
-| help/checklists/first_month.md | STUB | ✅ | Высокий | Полезный чек-лист |
-| help/checklists/rent_no_losses.md | STUB | ✅ | Высокий | |
-| help/checklists/visa_no_extra.md | STUB | ✅ | Высокий | |
-| help/support_project.md | STUB | ✅ | Высокий | Нужна конкретная информация как поддержать |
+| help/intro.md | DRAFT_READY_FOR_REVIEW | ✅ | Средний | Заполнено июнь 2026 |
+| help/analyze_my_case.md | DRAFT_READY_FOR_REVIEW | ✅ | Высокий | Заполнено июнь 2026: заявка, процесс, стоимость |
+| help/ask_question.md | DRAFT_READY_FOR_REVIEW | ✅ | Высокий | Заполнено июнь 2026: как писать, что писать |
+| help/checklists/intro.md | DRAFT_READY_FOR_REVIEW | ✅ | Средний | Заполнено июнь 2026 |
+| help/checklists/first_month.md | DRAFT_READY_FOR_REVIEW | ✅ | Высокий | Заполнено июнь 2026: связь, жильё, виза, страховка, дети |
+| help/checklists/rent_no_losses.md | DRAFT_READY_FOR_REVIEW | ✅ | Высокий | Заполнено июнь 2026: до/после заезда/выезда, TM30 |
+| help/checklists/visa_no_extra.md | DRAFT_READY_FOR_REVIEW | ✅ | Высокий | Заполнено июнь 2026: TDAC, re-entry, продление |
+| help/support_project.md | DRAFT_READY_FOR_REVIEW | ✅ | Высокий | Заполнено июнь 2026 |
 | help/checklists_guides.md | DUPLICATE | ❌ | — | Заменён подпапкой checklists/ |
 
 ---
@@ -204,10 +204,10 @@
 
 | Файл | Статус | В меню | Приоритет | Комментарий |
 |------|--------|--------|-----------|-------------|
-| about/intro.md | STUB | ✅ | Высокий | Приветственный текст раздела |
-| about/what_is_it.md | STUB | ✅ | Средний | |
-| about/author.md | STUB | ✅ | Средний | |
-| about/feedback.md | STUB | ✅ | Высокий | Нужны контакты для обратной связи |
+| about/intro.md | DRAFT_READY_FOR_REVIEW | ✅ | Высокий | Заполнено июнь 2026 |
+| about/what_is_it.md | DRAFT_READY_FOR_REVIEW | ✅ | Средний | Заполнено июнь 2026: описание бота, источники, ограничения |
+| about/author.md | DRAFT_READY_FOR_REVIEW | ✅ | Средний | Заполнено июнь 2026 |
+| about/feedback.md | DRAFT_READY_FOR_REVIEW | ✅ | Высокий | Заполнено июнь 2026: как писать, что с этим делают |
 
 ---
 
@@ -233,7 +233,8 @@
 | Статус | Кол-во файлов |
 |--------|--------------|
 | READY | 60 |
-| STUB | 38 |
+| DRAFT_READY_FOR_REVIEW | 33 |
+| STUB | 5 (не подключены к меню) |
 | DUPLICATE | 7 |
 | **Всего** | **105** |
 
@@ -248,3 +249,13 @@
 - Добавлена обязательная обработка от паразитов в 2 файла (требование DLD)
 - Добавлен Por. 161/2566 в work_taxes.md (налог с иностранных доходов с 01.01.2024)
 - Добавлено уточнение о выписке за 3+ месяца для DTV в 3 файла
+
+**Обновление 2026-06-18 (заполнение stub-файлов):** Заполнены все 33 оставшихся stub-файла из меню бота:
+- urgent/family_pets.md — переезд с детьми и питомцами
+- visa/intro.md, visa/elite_privilege.md — навигация и Thailand Privilege
+- housing_transport/cars.md, bikes.md — транспорт
+- life/intro.md, schools_education.md, mobile_internet.md, food_daily_life.md — быт
+- reality/ (17 файлов) — реальность Таиланда, культура, ошибки, мошенники
+- help/ (8 файлов) — помощь, чек-листы
+- about/ (4 файла) — о боте
+Все заполненные файлы получили статус DRAFT_READY_FOR_REVIEW — ждут проверки Дмитрием.
