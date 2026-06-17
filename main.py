@@ -70,6 +70,17 @@ def init_db():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS leads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            username TEXT,
+            action_type TEXT,
+            topic TEXT,
+            created_at TEXT
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -228,6 +239,35 @@ def get_recent_visits(limit: int = 12) -> List[tuple]:
         cursor = conn.cursor()
         cursor.execute(
             "SELECT username, section, visited_at FROM user_history ORDER BY visited_at DESC LIMIT ?",
+            (limit,)
+        )
+        result = cursor.fetchall()
+        conn.close()
+        return result
+    except Exception:
+        return []
+
+
+def save_lead(user_id: int, username: str, action_type: str, topic: str):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO leads (user_id, username, action_type, topic, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, username or "NoUsername", action_type, topic, datetime.now().isoformat()))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"save_lead error: {e}")
+
+
+def get_leads(limit: int = 20) -> List[tuple]:
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT username, action_type, topic, created_at FROM leads ORDER BY created_at DESC LIMIT ?",
             (limit,)
         )
         result = cursor.fetchall()
@@ -469,6 +509,7 @@ MENU_TREE: Dict[str, Any] = {
         "💰 Деньги и банки": {
             "_file": "money_home/intro.md",
             "_children": {
+                "🏦 Банковский счёт": {"_file": "money_home/bank_account.md", "_children": {}},
                 "💱 Обмен валюты": {
                     "_file": "money_home/exchange/intro.md",
                     "_children": {
@@ -663,6 +704,36 @@ def make_keyboard(
                 InlineKeyboardButton(name, callback_data=f"nav:{CURRENT_MENU_VERSION}:{node_id}")
             ])
 
+    _LEAD_SECTIONS = {
+        "📄 Визы и легализация",
+        "💰 Деньги и банки",
+        "🏠 Жильё и транспорт",
+        "💬 Как тут жить",
+        "🐾 Животные и переезд",
+    }
+    in_lead_section = path and path[0] in _LEAD_SECTIONS
+    is_leaf = not node.get("_children")
+    if in_lead_section and is_leaf:
+        topic = path[-1] if path else ""
+        buttons.append([
+            InlineKeyboardButton(
+                "📋 Получить персональный разбор",
+                callback_data=f"lead:analyze:{topic[:40]}"
+            )
+        ])
+        buttons.append([
+            InlineKeyboardButton(
+                "🤝 Передать заявку специалисту",
+                callback_data=f"lead:specialist:{topic[:40]}"
+            )
+        ])
+        buttons.append([
+            InlineKeyboardButton(
+                "⚠️ Сообщить об устаревшей информации",
+                callback_data=f"lead:report:{topic[:40]}"
+            )
+        ])
+
     important = [
         "📄 Визы и легализация",
         "💰 Деньги и банки",
@@ -827,6 +898,44 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
+        if data.startswith("lead:"):
+            parts = data.split(":", 2)
+            action_type = parts[1] if len(parts) > 1 else "unknown"
+            topic = parts[2] if len(parts) > 2 else ""
+
+            _LEAD_MESSAGES = {
+                "analyze": "📋 Заявка на персональный разбор принята.\n\nМы передадим её администратору. Как правило, ответ приходит в течение 1–2 рабочих дней.",
+                "specialist": "🤝 Заявка на специалиста принята.\n\nМы подберём подходящего специалиста и свяжемся с тобой.",
+                "report": "⚠️ Спасибо за сигнал!\n\nМы проверим информацию и обновим её, если она устарела.",
+            }
+            reply_text = _LEAD_MESSAGES.get(action_type, "Заявка принята.")
+            save_lead(user.id, user.username, action_type, topic)
+            logger.info(f"LEAD user_id={user.id} username={user.username} action={action_type} topic={topic}")
+
+            admin_id = os.getenv("ADMIN_USER_ID")
+            if admin_id:
+                try:
+                    _LEAD_LABELS = {
+                        "analyze": "📋 Персональный разбор",
+                        "specialist": "🤝 Заявка на специалиста",
+                        "report": "⚠️ Устаревшая информация",
+                    }
+                    label = _LEAD_LABELS.get(action_type, action_type)
+                    admin_text = (
+                        f"🔔 Новая заявка\n\n"
+                        f"Тип: {label}\n"
+                        f"Тема: {topic or '—'}\n"
+                        f"Telegram ID: {user.id}\n"
+                        f"Username: @{user.username or 'нет'}\n"
+                        f"Время: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                    )
+                    await context.bot.send_message(chat_id=int(admin_id), text=admin_text)
+                except Exception as e:
+                    logger.error(f"admin notify error: {e}")
+
+            await query.answer(reply_text, show_alert=True)
+            return
+
         if data.startswith("nav:"):
             parts = data.split(":")
             if len(parts) != 3:
@@ -948,6 +1057,7 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("📆 За неделю", callback_data="admin:week")],
         [InlineKeyboardButton("👥 Топ пользователей", callback_data="admin:users")],
         [InlineKeyboardButton("🕒 Последние посещения", callback_data="admin:recent")],
+        [InlineKeyboardButton("📋 Заявки (leads)", callback_data="admin:leads")],
     ])
     await update.effective_message.reply_text("📊 Админ-панель", reply_markup=keyboard)
 
@@ -980,6 +1090,13 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "admin:recent":
         visits = get_recent_visits(12)
         text = "🕒 Последние посещения\n\n" + ("\n".join([f"• {u} → {s}" for u, s, _ in visits]) if visits else "Пока нет данных.")
+    elif data == "admin:leads":
+        leads = get_leads(20)
+        if leads:
+            lines = [f"• @{u or '—'} [{a}] {t} — {c[:16]}" for u, a, t, c in leads]
+            text = "📋 Последние заявки\n\n" + "\n".join(lines)
+        else:
+            text = "📋 Заявок пока нет."
     else:
         text = "Неизвестная команда"
 

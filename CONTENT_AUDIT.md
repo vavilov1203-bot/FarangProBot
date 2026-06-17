@@ -1,6 +1,6 @@
 # Аудит контента FarangProBot
 
-Последнее обновление: 2026-06-17  
+Последнее обновление: 2026-06-17 (наполнение приоритетного контента)  
 Статусы: **READY** — готово | **NEEDS_UPDATE** — нужна актуализация | **STUB** — заглушка | **DUPLICATE** — дублирует другой файл
 
 ---
@@ -43,32 +43,32 @@
 | Файл | Статус | В меню | Интернет-проверка | Приоритет | Комментарий |
 |------|--------|--------|-------------------|-----------|-------------|
 | visa/intro.md | STUB | ✅ | ✅ Обязательно | Высокий | Нужен навигационный текст с кратким описанием видов виз |
-| visa/tourist.md | STUB | ✅ | ✅ Обязательно | Высокий | Туристические визы — самый частый вопрос |
+| visa/tourist.md | READY | ✅ | ✅ Июнь 2026 | — | Заполнено: безвизовый въезд, TR, re-entry, TDAC |
 | visa/elite_privilege.md | STUB | ✅ | ✅ Обязательно | Средний | Программа Thailand Privilege (бывш. Elite) |
-| visa/ed/intro.md | STUB | ✅ | ✅ Обязательно | Высокий | ED-виза — популярна |
-| visa/ed/who_fits.md | STUB | ✅ | ✅ Обязательно | Высокий | |
-| visa/ed/steps.md | STUB | ✅ | ✅ Обязательно | Высокий | |
-| visa/ed/risks.md | STUB | ✅ | ✅ Обязательно | Высокий | |
-| visa/dtv/intro.md | STUB | ✅ | ✅ Обязательно | Высокий | DTV — новая виза 2024 |
-| visa/dtv/who_fits.md | STUB | ✅ | ✅ Обязательно | Высокий | |
-| visa/dtv/steps.md | STUB | ✅ | ✅ Обязательно | Высокий | |
-| visa/dtv/risks.md | STUB | ✅ | ✅ Обязательно | Высокий | |
-| visa/business/intro.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| visa/business/who_fits.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| visa/business/steps.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| visa/business/risks.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| visa/family/intro.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| visa/family/grounds.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| visa/family/steps.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| visa/family/risks.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| visa/retirement/intro.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| visa/retirement/requirements.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| visa/retirement/steps.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| visa/retirement/risks.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| visa/extensions/intro.md | STUB | ✅ | ✅ Обязательно | Высокий | Продление — частая проблема |
-| visa/extensions/where_how.md | STUB | ✅ | ✅ Обязательно | Высокий | |
-| visa/extensions/deadlines_fines.md | STUB | ✅ | ✅ Обязательно | Высокий | Штрафы за overstay |
-| visa/extensions/common_mistakes.md | STUB | ✅ | ✅ Обязательно | Высокий | |
+| visa/ed/intro.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/ed/who_fits.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/ed/steps.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/ed/risks.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/dtv/intro.md | READY | ✅ | ✅ Июнь 2026 | — | DTV: 500к бат, 5 лет, 180 дней/въезд |
+| visa/dtv/who_fits.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/dtv/steps.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/dtv/risks.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/business/intro.md | READY | ✅ | ✅ Июнь 2026 | — | Non-B + Work Permit |
+| visa/business/who_fits.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/business/steps.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/business/risks.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/family/intro.md | READY | ✅ | ✅ Июнь 2026 | — | Non-O семейная |
+| visa/family/grounds.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/family/steps.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/family/risks.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/retirement/intro.md | READY | ✅ | ✅ Июнь 2026 | — | Non-OA 50+, 800к бат |
+| visa/retirement/requirements.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/retirement/steps.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/retirement/risks.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/extensions/intro.md | READY | ✅ | ✅ Июнь 2026 | — | TM30, TM47, re-entry, overstay |
+| visa/extensions/where_how.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/extensions/deadlines_fines.md | READY | ✅ | ✅ Июнь 2026 | — | Штрафы и сроки бана |
+| visa/extensions/common_mistakes.md | READY | ✅ | ✅ Июнь 2026 | — | |
 | visa/which_visa.md | STUB | ❌ | ✅ Обязательно | Средний | Не подключён, нужен как «навигатор» |
 | visa/useful.md | STUB | ❌ | ✅ Обязательно | Средний | TM30, Re-entry — пока не подключён |
 | visa/ed.md | DUPLICATE | ❌ | — | — | Заменён подпапкой visa/ed/ |
@@ -83,19 +83,20 @@
 
 | Файл | Статус | В меню | Интернет-проверка | Приоритет | Комментарий |
 |------|--------|--------|-------------------|-----------|-------------|
-| money_home/intro.md | STUB | ✅ | ✅ Желательно | Высокий | |
-| money_home/exchange/intro.md | STUB | ✅ | ✅ Желательно | Высокий | |
-| money_home/exchange/where_best.md | STUB | ✅ | ✅ Желательно | Высокий | Суперчастый вопрос |
-| money_home/exchange/banks_vs_exchangers.md | STUB | ✅ | ✅ Желательно | Высокий | |
-| money_home/exchange/safety.md | STUB | ✅ | Нет | Средний | |
-| money_home/payments/intro.md | STUB | ✅ | Нет | Средний | |
-| money_home/payments/cash_vs_cashless.md | STUB | ✅ | Нет | Средний | |
-| money_home/payments/cards_blocks.md | STUB | ✅ | ✅ Желательно | Высокий | Блокировки карт — актуальная проблема |
-| money_home/payments/talk_to_bank.md | STUB | ✅ | Нет | Средний | |
-| money_home/rent/intro.md | STUB | ✅ | Нет | Средний | |
-| money_home/rent/deposits_contracts.md | STUB | ✅ | Нет | Средний | |
-| money_home/rent/agent_not_friend.md | STUB | ✅ | Нет | Средний | |
-| money_home/rent/scams.md | STUB | ✅ | Нет | Высокий | Частые схемы развода |
+| money_home/intro.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| money_home/bank_account.md | READY | ✅ | ✅ Июнь 2026 | — | НОВЫЙ: KBank/Bangkok Bank, требования к визе |
+| money_home/exchange/intro.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| money_home/exchange/where_best.md | READY | ✅ | ✅ Июнь 2026 | — | Super Rich, рейтинг вариантов |
+| money_home/exchange/banks_vs_exchangers.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| money_home/exchange/safety.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| money_home/payments/intro.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| money_home/payments/cash_vs_cashless.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| money_home/payments/cards_blocks.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| money_home/payments/talk_to_bank.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| money_home/rent/intro.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| money_home/rent/deposits_contracts.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| money_home/rent/agent_not_friend.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| money_home/rent/scams.md | READY | ✅ | ✅ Июнь 2026 | — | Типовые схемы, Tourist Police 1155 |
 
 ---
 
@@ -103,12 +104,12 @@
 
 | Файл | Статус | В меню | Интернет-проверка | Приоритет | Комментарий |
 |------|--------|--------|-------------------|-----------|-------------|
-| housing_transport/intro.md | STUB | ✅ | Нет | Средний | |
-| housing_transport/condos.md | STUB | ✅ | Нет | Высокий | Кондо — самый частый тип жилья |
-| housing_transport/houses_villas.md | STUB | ✅ | Нет | Средний | |
+| housing_transport/intro.md | READY | ✅ | ✅ Июнь 2026 | — | Типы жилья, транспорт, ориентировочные цены |
+| housing_transport/condos.md | READY | ✅ | ✅ Июнь 2026 | — | DDProperty, чек-лист перед подписанием |
+| housing_transport/houses_villas.md | READY | ✅ | ✅ Июнь 2026 | — | |
 | housing_transport/cars.md | STUB | ✅ | ✅ Желательно | Средний | Права, страховка |
 | housing_transport/bikes.md | STUB | ✅ | ✅ Желательно | Высокий | Байк — тема безопасности |
-| housing_transport/useful_rent.md | STUB | ✅ | Нет | Средний | |
+| housing_transport/useful_rent.md | READY | ✅ | ✅ Июнь 2026 | — | Чек-листы при заезде/выезде |
 
 ---
 
@@ -119,11 +120,11 @@
 | Файл | Статус | В меню | Интернет-проверка | Приоритет | Комментарий |
 |------|--------|--------|-------------------|-----------|-------------|
 | life/intro.md | STUB | ✅ | Нет | Средний | |
-| life/medicine_insurance.md | STUB | ✅ | ✅ Желательно | Высокий | |
+| life/medicine_insurance.md | READY | ✅ | ✅ Июнь 2026 | — | Гос/частные клиники, страховки, экстренная помощь |
 | life/schools_education.md | STUB | ✅ | ✅ Желательно | Средний | |
 | life/mobile_internet.md | STUB | ✅ | Нет | Средний | |
 | life/food_daily_life.md | STUB | ✅ | Нет | Низкий | |
-| life/work_taxes.md | STUB | ✅ | ✅ Обязательно | Высокий | Налоги — меняются, 180-дневное правило |
+| life/work_taxes.md | READY | ✅ | ✅ Июнь 2026 | — | Work Permit, ставки налогов, правило 180 дней |
 | life/banks_money.md | DUPLICATE | ❌ | — | — | Заменён разделом money_home/ |
 
 ---
@@ -134,12 +135,12 @@
 
 | Файл | Статус | В меню | Интернет-проверка | Приоритет | Комментарий |
 |------|--------|--------|-------------------|-----------|-------------|
-| pets_relocation/intro.md | STUB | ✅ | Нет | Средний | |
-| pets_relocation/import_pet.md | STUB | ✅ | ✅ Обязательно | Высокий | Требования меняются |
-| pets_relocation/documents_requirements.md | STUB | ✅ | ✅ Обязательно | Высокий | |
-| pets_relocation/vet_care.md | STUB | ✅ | Нет | Средний | |
-| pets_relocation/export_from_thailand.md | STUB | ✅ | ✅ Обязательно | Средний | |
-| pets_relocation/practical_tips.md | STUB | ✅ | Нет | Средний | |
+| pets_relocation/intro.md | READY | ✅ | ✅ Июнь 2026 | — | DLD, кошки и собаки, что разрешено |
+| pets_relocation/import_pet.md | READY | ✅ | ✅ Июнь 2026 | — | Пошаговый план ввоза |
+| pets_relocation/documents_requirements.md | READY | ✅ | ✅ Июнь 2026 | — | Чип, бешенство, сертификат, разрешение DLD |
+| pets_relocation/vet_care.md | READY | ✅ | ✅ Июнь 2026 | — | Ветклиники по городам, цены |
+| pets_relocation/export_from_thailand.md | READY | ✅ | ✅ Июнь 2026 | — | Требования страны назначения, DLD |
+| pets_relocation/practical_tips.md | READY | ✅ | ✅ Июнь 2026 | — | Перелёт, адаптация, тропики |
 
 ---
 
@@ -231,10 +232,12 @@
 
 | Статус | Кол-во файлов |
 |--------|--------------|
-| READY | 9 |
-| STUB | 88 |
+| READY | 60 |
+| STUB | 38 |
 | DUPLICATE | 7 |
-| **Всего** | **104** |
+| **Всего** | **105** |
 
-Файлов в меню: 97  
+Файлов в меню: 98 (добавлен money_home/bank_account.md)
+
+**Обновление 2026-06-17:** заполнено 51 приоритетных статей (визы, деньги, жильё, медицина, животные, работа). Добавлена система lead-capture в main.py (заявки в БД + уведомление администратора).  
 Файлов не в меню: 17 (из них 7 дубликатов, 4 заглушки, 6 culture/ кандидаты на удаление)
