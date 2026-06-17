@@ -507,7 +507,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 
 # ==================== ЗАПУСК ====================
 def main():
-    token = "7082328352:AAE4kfCe47MXDfZCeMpyY_YDrpMG6Vndch0"
+    token = (os.getenv("BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN") or "").strip()
     if not token:
         raise RuntimeError("BOT_TOKEN не найден!")
 
