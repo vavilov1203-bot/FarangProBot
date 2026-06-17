@@ -1,6 +1,6 @@
 # Аудит контента FarangProBot
 
-Последнее обновление: 2026-06-17 (наполнение приоритетного контента)  
+Последнее обновление: 2026-06-18 (фактчекинг и исправление ошибок)  
 Статусы: **READY** — готово | **NEEDS_UPDATE** — нужна актуализация | **STUB** — заглушка | **DUPLICATE** — дублирует другой файл
 
 ---
@@ -49,9 +49,9 @@
 | visa/ed/who_fits.md | READY | ✅ | ✅ Июнь 2026 | — | |
 | visa/ed/steps.md | READY | ✅ | ✅ Июнь 2026 | — | |
 | visa/ed/risks.md | READY | ✅ | ✅ Июнь 2026 | — | |
-| visa/dtv/intro.md | READY | ✅ | ✅ Июнь 2026 | — | DTV: 500к бат, 5 лет, 180 дней/въезд |
-| visa/dtv/who_fits.md | READY | ✅ | ✅ Июнь 2026 | — | |
-| visa/dtv/steps.md | READY | ✅ | ✅ Июнь 2026 | — | |
+| visa/dtv/intro.md | READY | ✅ | ✅ Июнь 2026 | — | DTV: 500к бат, 5 лет, 180 дней/въезд. Добавлено: выписка за 3+ мес. |
+| visa/dtv/who_fits.md | READY | ✅ | ✅ Июнь 2026 | — | Добавлено: выписка за 3+ мес. (по опыту посольств) |
+| visa/dtv/steps.md | READY | ✅ | ✅ Июнь 2026 | — | Добавлено: выписка за 3+ мес. |
 | visa/dtv/risks.md | READY | ✅ | ✅ Июнь 2026 | — | |
 | visa/business/intro.md | READY | ✅ | ✅ Июнь 2026 | — | Non-B + Work Permit |
 | visa/business/who_fits.md | READY | ✅ | ✅ Июнь 2026 | — | |
@@ -65,9 +65,9 @@
 | visa/retirement/requirements.md | READY | ✅ | ✅ Июнь 2026 | — | |
 | visa/retirement/steps.md | READY | ✅ | ✅ Июнь 2026 | — | |
 | visa/retirement/risks.md | READY | ✅ | ✅ Июнь 2026 | — | |
-| visa/extensions/intro.md | READY | ✅ | ✅ Июнь 2026 | — | TM30, TM47, re-entry, overstay |
+| visa/extensions/intro.md | READY | ✅ | ✅ Июнь 2026 | — | TM30, TM47, re-entry, overstay. Исправлена таблица бана (было WRONG) |
 | visa/extensions/where_how.md | READY | ✅ | ✅ Июнь 2026 | — | |
-| visa/extensions/deadlines_fines.md | READY | ✅ | ✅ Июнь 2026 | — | Штрафы и сроки бана |
+| visa/extensions/deadlines_fines.md | READY | ✅ | ✅ Июнь 2026 | — | Штрафы и сроки бана. Исправлена таблица бана (было WRONG) |
 | visa/extensions/common_mistakes.md | READY | ✅ | ✅ Июнь 2026 | — | |
 | visa/which_visa.md | STUB | ❌ | ✅ Обязательно | Средний | Не подключён, нужен как «навигатор» |
 | visa/useful.md | STUB | ❌ | ✅ Обязательно | Средний | TM30, Re-entry — пока не подключён |
@@ -124,7 +124,7 @@
 | life/schools_education.md | STUB | ✅ | ✅ Желательно | Средний | |
 | life/mobile_internet.md | STUB | ✅ | Нет | Средний | |
 | life/food_daily_life.md | STUB | ✅ | Нет | Низкий | |
-| life/work_taxes.md | READY | ✅ | ✅ Июнь 2026 | — | Work Permit, ставки налогов, правило 180 дней |
+| life/work_taxes.md | READY | ✅ | ✅ Июнь 2026 | — | Work Permit, ставки налогов, правило 180 дней. Добавлен Por. 161/2566 |
 | life/banks_money.md | DUPLICATE | ❌ | — | — | Заменён разделом money_home/ |
 
 ---
@@ -136,8 +136,8 @@
 | Файл | Статус | В меню | Интернет-проверка | Приоритет | Комментарий |
 |------|--------|--------|-------------------|-----------|-------------|
 | pets_relocation/intro.md | READY | ✅ | ✅ Июнь 2026 | — | DLD, кошки и собаки, что разрешено |
-| pets_relocation/import_pet.md | READY | ✅ | ✅ Июнь 2026 | — | Пошаговый план ввоза |
-| pets_relocation/documents_requirements.md | READY | ✅ | ✅ Июнь 2026 | — | Чип, бешенство, сертификат, разрешение DLD |
+| pets_relocation/import_pet.md | READY | ✅ | ✅ Июнь 2026 | — | Пошаговый план ввоза. Исправлено: бешенство 21 день (не 30). Добавлено: обработка от паразитов |
+| pets_relocation/documents_requirements.md | READY | ✅ | ✅ Июнь 2026 | — | Чип, бешенство, сертификат, разрешение DLD. Исправлено: 21 день. Добавлено: справка о паразитах |
 | pets_relocation/vet_care.md | READY | ✅ | ✅ Июнь 2026 | — | Ветклиники по городам, цены |
 | pets_relocation/export_from_thailand.md | READY | ✅ | ✅ Июнь 2026 | — | Требования страны назначения, DLD |
 | pets_relocation/practical_tips.md | READY | ✅ | ✅ Июнь 2026 | — | Перелёт, адаптация, тропики |
@@ -241,3 +241,10 @@
 
 **Обновление 2026-06-17:** заполнено 51 приоритетных статей (визы, деньги, жильё, медицина, животные, работа). Добавлена система lead-capture в main.py (заявки в БД + уведомление администратора).  
 Файлов не в меню: 17 (из них 7 дубликатов, 4 заглушки, 6 culture/ кандидаты на удаление)
+
+**Обновление 2026-06-18 (фактчекинг):** Исправлены подтверждённые ошибки:
+- Таблица бана overstay в 2 файлах (было WRONG: бан с 1 дня; правильно: до 90 дней — только штраф)
+- Срок прививки от бешенства для питомцев: 30 дней → 21 день (официальный DLD)
+- Добавлена обязательная обработка от паразитов в 2 файла (требование DLD)
+- Добавлен Por. 161/2566 в work_taxes.md (налог с иностранных доходов с 01.01.2024)
+- Добавлено уточнение о выписке за 3+ месяца для DTV в 3 файла
