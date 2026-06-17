@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "farangprobot.db")
 
-CURRENT_MENU_VERSION = "v4"
+CURRENT_MENU_VERSION = "v5"
 
 
 # ==================== БАЗА ДАННЫХ ====================
@@ -67,6 +67,17 @@ def init_db():
             query TEXT,
             results_count INTEGER,
             searched_at TEXT
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS leads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            username TEXT,
+            action_type TEXT,
+            topic TEXT,
+            created_at TEXT
         )
     """)
 
@@ -237,6 +248,35 @@ def get_recent_visits(limit: int = 12) -> List[tuple]:
         return []
 
 
+def save_lead(user_id: int, username: str, action_type: str, topic: str):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO leads (user_id, username, action_type, topic, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, username or "NoUsername", action_type, topic, datetime.now().isoformat()))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"save_lead error: {e}")
+
+
+def get_leads(limit: int = 20) -> List[tuple]:
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT username, action_type, topic, created_at FROM leads ORDER BY created_at DESC LIMIT ?",
+            (limit,)
+        )
+        result = cursor.fetchall()
+        conn.close()
+        return result
+    except Exception:
+        return []
+
+
 init_db()
 
 
@@ -248,17 +288,23 @@ def content_path(relative_path: str) -> str:
     return os.path.join(BASE_DIR, "content", relative_path)
 
 
+_STUB_MARKERS = ("Этот раздел ещё заполняется", "Раздел находится в разработке")
+
 def load_content(path: str) -> str:
     try:
         with open(path, "r", encoding="utf-8") as file:
             content = file.read()
-            return content if content.strip() else "Раздел находится в разработке."
+        if not content.strip():
+            return "🔧 Раздел готовится. Загляни позже."
+        if any(marker in content for marker in _STUB_MARKERS):
+            return "🔧 Раздел готовится. Мы работаем над этим материалом — загляни позже."
+        return content
     except FileNotFoundError:
         logger.warning(f"Файл не найден: {path}")
-        return "Раздел находится в разработке."
+        return "🔧 Раздел готовится. Загляни позже."
     except Exception as e:
         logger.error(f"load_content error: {e}")
-        return "Раздел находится в разработке."
+        return "🔧 Ошибка загрузки раздела."
 
 
 def get_text(node: Dict[str, Any]) -> str:
@@ -271,40 +317,230 @@ def get_text(node: Dict[str, Any]) -> str:
         content = load_content(content_path(key))
         _content_cache[key] = content
         return content
-    return "Раздел находится в разработке."
+    return "🔧 Раздел готовится. Загляни позже."
 
 
 # ==================== МЕНЮ ====================
 MENU_TREE: Dict[str, Any] = {
-    "_text": "Выбери пункт из меню 👇",
+    "_text": "Выбери раздел 👇\n\n🧭 Не знаешь с чего начать? Нажми «Моя ситуация».",
     "_children": {
+        "🧭 Моя ситуация / С чего начать": {
+            "_text": "Выбери свою ситуацию — покажу, с чего начать 👇",
+            "_children": {
+                "Я планирую переезд": {
+                    "_text": (
+                        "🗺 Планируешь переезд в Таиланд\n\n"
+                        "С чего начать:\n\n"
+                        "1. Определись с визой — от этого зависит всё остальное.\n"
+                        "2. Изучи районы, прежде чем искать жильё.\n"
+                        "3. Не принимай необратимых решений до первого визита.\n\n"
+                        "📌 Полезные разделы в главном меню:\n"
+                        "→ «Визы и легализация» — какая виза тебе подходит\n"
+                        "→ «Жильё и транспорт» — как устроена аренда\n"
+                        "→ «Как тут жить» — медицина, связь, школы"
+                    ),
+                    "_children": {}
+                },
+                "Я только приехал": {
+                    "_text": (
+                        "🚨 Ты только что прилетел\n\n"
+                        "Главное сейчас — не торопиться.\n\n"
+                        "1. Свяжись с близкими — сообщи, что долетел.\n"
+                        "2. Купи SIM или подключи eSIM.\n"
+                        "3. Обменяй немного батов.\n"
+                        "4. Доберись до отеля и отдохни.\n"
+                        "5. Первые важные решения — только после нормального сна.\n\n"
+                        "📌 Открой раздел «🚨 Я только приехал» — там все подробные инструкции."
+                    ),
+                    "_children": {}
+                },
+                "Мне нужна виза": {
+                    "_text": (
+                        "📄 Нужна виза в Таиланд\n\n"
+                        "Основные варианты:\n\n"
+                        "• Туристическая — до 60 дней, можно продлить один раз\n"
+                        "• ED (учебная) — от 1 года, нужна аккредитованная школа\n"
+                        "• DTV — для цифровых кочевников и фрилансеров\n"
+                        "• Бизнес-виза — для тех, кто работает или открывает компанию\n"
+                        "• Семейная — если есть тайский супруг или ребёнок\n"
+                        "• Пенсионная — от 50 лет\n\n"
+                        "📌 Открой раздел «📄 Визы и легализация» — подробности по каждому типу."
+                    ),
+                    "_children": {}
+                },
+                "Ищу жильё": {
+                    "_text": (
+                        "🏠 Ищешь жильё в Таиланде\n\n"
+                        "Главные правила:\n\n"
+                        "• Не снимай на долгий срок сразу после прилёта\n"
+                        "• Первые 7–10 дней — временное жильё\n"
+                        "• Сначала осмотри район, потом — квартиру\n"
+                        "• Риелтор не твой друг, даже если говорит по-русски\n"
+                        "• Всегда читай договор до подписания\n\n"
+                        "📌 Разделы в меню:\n"
+                        "→ «Жильё и транспорт» — типы жилья и аренда\n"
+                        "→ «Деньги и банки» → «Аренда» — депозиты, схемы развода"
+                    ),
+                    "_children": {}
+                },
+                "Переезжаю с семьёй": {
+                    "_text": (
+                        "👨‍👩‍👧 Переезжаешь с семьёй\n\n"
+                        "Что важно учесть:\n\n"
+                        "• Виза для детей оформляется отдельно\n"
+                        "• Школы в Таиланде — международные (дорогие) и тайские\n"
+                        "• Медицина — оформи страховку на всех членов семьи\n"
+                        "• Выбирай район с учётом школы, больницы, магазинов\n\n"
+                        "📌 Разделы в меню:\n"
+                        "→ «Визы» — семейные визы\n"
+                        "→ «Как тут жить» — школы, медицина"
+                    ),
+                    "_children": {}
+                },
+                "Переезжаю с животным": {
+                    "_text": (
+                        "🐾 Везёшь питомца в Таиланд\n\n"
+                        "Минимум, что нужно знать:\n\n"
+                        "• Нужны: справка от ветеринара, чип, прививки (в т.ч. от бешенства)\n"
+                        "• Документы оформляются за несколько недель до вылета\n"
+                        "• Таиланд разрешает ввоз кошек и собак при соблюдении требований\n"
+                        "• В туристических районах есть хорошие ветклиники\n\n"
+                        "📌 Открой раздел «🐾 Животные и переезд» — полный список документов."
+                    ),
+                    "_children": {}
+                },
+                "Хочу работать / открыть бизнес": {
+                    "_text": (
+                        "💼 Работа и бизнес в Таиланде\n\n"
+                        "Что важно понять сразу:\n\n"
+                        "• Работать без разрешения на работу (Work Permit) — нелегально\n"
+                        "• Это касается в том числе удалённой работы\n"
+                        "• Для открытия бизнеса нужна компания Thai Ltd или BOI\n"
+                        "• DTV-виза — для фрилансеров, не даёт право работать на тайских работодателей\n\n"
+                        "📌 Разделы в меню:\n"
+                        "→ «Визы» — DTV и бизнес-виза\n"
+                        "→ «Как тут жить» → «Работа и налоги»"
+                    ),
+                    "_children": {}
+                },
+                "У меня возникла проблема": {
+                    "_text": (
+                        "🆘 Возникла проблема\n\n"
+                        "Частые ситуации:\n\n"
+                        "• Просрочил визу → «Визы» → «Продление и штрафы»\n"
+                        "• Проблема с жильём → «Деньги и банки» → «Аренда»\n"
+                        "• Заблокировали карту → «Деньги и банки» → «Карты и платежи»\n"
+                        "• Попал в ДТП или конфликт → «Реальность Таиланда»\n"
+                        "• Другое → «Нужна помощь» → «Задать вопрос»"
+                    ),
+                    "_children": {}
+                },
+            }
+        },
         "🚨 Я только приехал": {
             "_file": "urgent/intro.md",
             "_children": {
                 "✈️ Аэропорт и первые часы": {"_file": "urgent/first_72_airport.md", "_children": {}},
-                "📱 Связь: SIM / eSIM": {"_file": "urgent/first_72_sim.md", "_children": {}},
+                "🚕 Транспорт из аэропорта": {"_file": "urgent/first_72_transport.md", "_children": {}},
+                "📱 SIM-карта и интернет": {"_file": "urgent/first_72_sim.md", "_children": {}},
                 "💸 Деньги в первые дни": {"_file": "urgent/first_72_money.md", "_children": {}},
-                "✅ Чек-лист 72 часа": {"_file": "urgent/first_day_checklist.md", "_children": {}},
+                "🏠 Первое жильё": {"_file": "urgent/first_72_housing.md", "_children": {}},
+                "⚠️ Таиланд — не рай": {"_file": "urgent/thailand_not_paradise.md", "_children": {}},
+                "✅ Чек-лист первых 72 часов": {"_file": "urgent/first_day_checklist.md", "_children": {}},
                 "❌ Топ-5 ошибок первых дней": {"_file": "urgent/top5_mistakes.md", "_children": {}},
                 "🧳 С семьёй и/или питомцем": {"_file": "urgent/family_pets.md", "_children": {}},
             },
         },
-        "📄 Виза и легализация": {
+        "📄 Визы и легализация": {
             "_file": "visa/intro.md",
             "_children": {
-                "📚 Туристические визы": {"_file": "visa/tourist.md", "_children": {}},
-                "🧑‍🎓 Учебные визы ED": {"_file": "visa/ed.md", "_children": {}},
-                "💼 Рабочие и бизнес-визы": {"_file": "visa/business_work.md", "_children": {}},
-                "❤️ Семейные и пенсионные": {"_file": "visa/family_retirement.md", "_children": {}},
+                "🧑‍🎓 ED — учебная виза": {
+                    "_file": "visa/ed/intro.md",
+                    "_children": {
+                        "Кому подходит": {"_file": "visa/ed/who_fits.md", "_children": {}},
+                        "Как получить (шаги)": {"_file": "visa/ed/steps.md", "_children": {}},
+                        "Риски и ошибки": {"_file": "visa/ed/risks.md", "_children": {}},
+                    }
+                },
+                "🌐 DTV — цифровой кочевник": {
+                    "_file": "visa/dtv/intro.md",
+                    "_children": {
+                        "Кому подходит": {"_file": "visa/dtv/who_fits.md", "_children": {}},
+                        "Как получить (шаги)": {"_file": "visa/dtv/steps.md", "_children": {}},
+                        "Риски и ошибки": {"_file": "visa/dtv/risks.md", "_children": {}},
+                    }
+                },
+                "💼 Бизнес-виза и работа": {
+                    "_file": "visa/business/intro.md",
+                    "_children": {
+                        "Кому подходит": {"_file": "visa/business/who_fits.md", "_children": {}},
+                        "Как получить (шаги)": {"_file": "visa/business/steps.md", "_children": {}},
+                        "Риски и ошибки": {"_file": "visa/business/risks.md", "_children": {}},
+                    }
+                },
+                "❤️ Семейная виза": {
+                    "_file": "visa/family/intro.md",
+                    "_children": {
+                        "Основания": {"_file": "visa/family/grounds.md", "_children": {}},
+                        "Как получить (шаги)": {"_file": "visa/family/steps.md", "_children": {}},
+                        "Риски и ошибки": {"_file": "visa/family/risks.md", "_children": {}},
+                    }
+                },
+                "🧓 Пенсионная виза": {
+                    "_file": "visa/retirement/intro.md",
+                    "_children": {
+                        "Требования": {"_file": "visa/retirement/requirements.md", "_children": {}},
+                        "Как получить (шаги)": {"_file": "visa/retirement/steps.md", "_children": {}},
+                        "Риски": {"_file": "visa/retirement/risks.md", "_children": {}},
+                    }
+                },
+                "📚 Туристическая виза": {"_file": "visa/tourist.md", "_children": {}},
                 "👑 Thailand Elite / Privilege": {"_file": "visa/elite_privilege.md", "_children": {}},
-                "⚙️ Полезное: TM30, Re-entry, overstay": {"_file": "visa/useful.md", "_children": {}},
+                "⚙️ Продление, TM30, overstay": {
+                    "_file": "visa/extensions/intro.md",
+                    "_children": {
+                        "Где и как продлить": {"_file": "visa/extensions/where_how.md", "_children": {}},
+                        "Сроки и штрафы": {"_file": "visa/extensions/deadlines_fines.md", "_children": {}},
+                        "Типовые ошибки": {"_file": "visa/extensions/common_mistakes.md", "_children": {}},
+                    }
+                },
+            },
+        },
+        "💰 Деньги и банки": {
+            "_file": "money_home/intro.md",
+            "_children": {
+                "🏦 Банковский счёт": {"_file": "money_home/bank_account.md", "_children": {}},
+                "💱 Обмен валюты": {
+                    "_file": "money_home/exchange/intro.md",
+                    "_children": {
+                        "Где менять выгодно": {"_file": "money_home/exchange/where_best.md", "_children": {}},
+                        "Банки vs обменники": {"_file": "money_home/exchange/banks_vs_exchangers.md", "_children": {}},
+                        "Безопасность при обмене": {"_file": "money_home/exchange/safety.md", "_children": {}},
+                    }
+                },
+                "💳 Карты и платежи": {
+                    "_file": "money_home/payments/intro.md",
+                    "_children": {
+                        "Нал vs безнал": {"_file": "money_home/payments/cash_vs_cashless.md", "_children": {}},
+                        "Карты и блокировки": {"_file": "money_home/payments/cards_blocks.md", "_children": {}},
+                        "Что говорить банку": {"_file": "money_home/payments/talk_to_bank.md", "_children": {}},
+                    }
+                },
+                "🏠 Аренда: деньги и договоры": {
+                    "_file": "money_home/rent/intro.md",
+                    "_children": {
+                        "Депозиты и контракты": {"_file": "money_home/rent/deposits_contracts.md", "_children": {}},
+                        "Агент ≠ твой друг": {"_file": "money_home/rent/agent_not_friend.md", "_children": {}},
+                        "Типовые схемы развода": {"_file": "money_home/rent/scams.md", "_children": {}},
+                    }
+                },
             },
         },
         "🏠 Жильё и транспорт": {
             "_file": "housing_transport/intro.md",
             "_children": {
-                "🏙 Кондо / квартиры": {"_file": "housing_transport/condos.md", "_children": {}},
-                "🏡 Дома / виллы": {"_file": "housing_transport/houses_villas.md", "_children": {}},
+                "🏙 Кондо и квартиры": {"_file": "housing_transport/condos.md", "_children": {}},
+                "🏡 Дома и виллы": {"_file": "housing_transport/houses_villas.md", "_children": {}},
                 "🚗 Автомобили": {"_file": "housing_transport/cars.md", "_children": {}},
                 "🛵 Байки и мотоциклы": {"_file": "housing_transport/bikes.md", "_children": {}},
                 "⚙️ Полезное по аренде": {"_file": "housing_transport/useful_rent.md", "_children": {}},
@@ -313,8 +549,7 @@ MENU_TREE: Dict[str, Any] = {
         "💬 Как тут жить": {
             "_file": "life/intro.md",
             "_children": {
-                "💳 Банки и деньги": {"_file": "life/banks_money.md", "_children": {}},
-                "💊 Медицина и страховка": {"_file": "life/medicine_insurance.md", "_children": {}},
+                "🏥 Медицина и страховка": {"_file": "life/medicine_insurance.md", "_children": {}},
                 "🏫 Школы и образование": {"_file": "life/schools_education.md", "_children": {}},
                 "📱 Связь и интернет": {"_file": "life/mobile_internet.md", "_children": {}},
                 "🍛 Быт и продукты": {"_file": "life/food_daily_life.md", "_children": {}},
@@ -331,14 +566,41 @@ MENU_TREE: Dict[str, Any] = {
                 "🐈 Практические советы": {"_file": "pets_relocation/practical_tips.md", "_children": {}},
             },
         },
-        "⚠️ Поведение и культура": {
-            "_file": "culture/intro.md",
+        "⚠️ Реальность Таиланда": {
+            "_file": "reality/intro.md",
             "_children": {
-                "👣 Прежде чем ты начнёшь": {"_file": "culture/before_you_start.md", "_children": {}},
-                "🙏 Тайская культура и табу": {"_file": "culture/thai_culture_taboo.md", "_children": {}},
-                "😑 Типичные ошибки фарангов": {"_file": "culture/farang_mistakes.md", "_children": {}},
-                "💡 Как вызывать уважение": {"_file": "culture/respect.md", "_children": {}},
-                "🧘 Сабай-сабай": {"_file": "culture/sabai_sabai.md", "_children": {}},
+                "🧠 Ты фаранг — что это значит": {
+                    "_file": "reality/farang/intro.md",
+                    "_children": {
+                        "Что это значит": {"_file": "reality/farang/what_it_means.md", "_children": {}},
+                        "Улыбки ≠ дружба": {"_file": "reality/farang/smiles_not_friendship.md", "_children": {}},
+                        "Где ошибаются чаще всего": {"_file": "reality/farang/common_errors.md", "_children": {}},
+                    }
+                },
+                "🚩 Помогаторы и мошенники": {
+                    "_file": "reality/helpers/intro.md",
+                    "_children": {
+                        "Красные флаги": {"_file": "reality/helpers/red_flags.md", "_children": {}},
+                        "Типовые схемы": {"_file": "reality/helpers/schemes.md", "_children": {}},
+                        "Как отказывать": {"_file": "reality/helpers/how_to_say_no.md", "_children": {}},
+                    }
+                },
+                "😵 Типичные ошибки": {
+                    "_file": "reality/mistakes/intro.md",
+                    "_children": {
+                        "Алкоголь и агрессия": {"_file": "reality/mistakes/alcohol_aggression.md", "_children": {}},
+                        "Байк и полиция": {"_file": "reality/mistakes/bike_police.md", "_children": {}},
+                        "Нелегальная работа": {"_file": "reality/mistakes/illegal_work.md", "_children": {}},
+                    }
+                },
+                "🙏 Культура и запреты": {
+                    "_file": "reality/culture/intro.md",
+                    "_children": {
+                        "Король и религия": {"_file": "reality/culture/king_religion.md", "_children": {}},
+                        "Храмы и одежда": {"_file": "reality/culture/temples_clothes.md", "_children": {}},
+                        "Потеря лица": {"_file": "reality/culture/lose_face.md", "_children": {}},
+                    }
+                },
             },
         },
         "🆘 Нужна помощь": {
@@ -346,7 +608,14 @@ MENU_TREE: Dict[str, Any] = {
             "_children": {
                 "🔍 Разобрать мою ситуацию": {"_file": "help/analyze_my_case.md", "_children": {}},
                 "💬 Задать вопрос": {"_file": "help/ask_question.md", "_children": {}},
-                "📋 Чек-листы и гайды": {"_file": "help/checklists_guides.md", "_children": {}},
+                "📋 Чек-листы": {
+                    "_file": "help/checklists/intro.md",
+                    "_children": {
+                        "Первый месяц": {"_file": "help/checklists/first_month.md", "_children": {}},
+                        "Аренда без потерь": {"_file": "help/checklists/rent_no_losses.md", "_children": {}},
+                        "Виза без лишних расходов": {"_file": "help/checklists/visa_no_extra.md", "_children": {}},
+                    }
+                },
                 "❤️ Поддержать проект": {"_file": "help/support_project.md", "_children": {}},
             },
         },
@@ -435,12 +704,43 @@ def make_keyboard(
                 InlineKeyboardButton(name, callback_data=f"nav:{CURRENT_MENU_VERSION}:{node_id}")
             ])
 
-    important = [
-        "📄 Виза и легализация",
+    _LEAD_SECTIONS = {
+        "📄 Визы и легализация",
+        "💰 Деньги и банки",
         "🏠 Жильё и транспорт",
         "💬 Как тут жить",
         "🐾 Животные и переезд",
-        "⚠️ Поведение и культура",
+    }
+    in_lead_section = path and path[0] in _LEAD_SECTIONS
+    is_leaf = not node.get("_children")
+    if in_lead_section and is_leaf:
+        topic = path[-1] if path else ""
+        buttons.append([
+            InlineKeyboardButton(
+                "📋 Получить персональный разбор",
+                callback_data=f"lead:analyze:{topic[:40]}"
+            )
+        ])
+        buttons.append([
+            InlineKeyboardButton(
+                "🤝 Передать заявку специалисту",
+                callback_data=f"lead:specialist:{topic[:40]}"
+            )
+        ])
+        buttons.append([
+            InlineKeyboardButton(
+                "⚠️ Сообщить об устаревшей информации",
+                callback_data=f"lead:report:{topic[:40]}"
+            )
+        ])
+
+    important = [
+        "📄 Визы и легализация",
+        "💰 Деньги и банки",
+        "🏠 Жильё и транспорт",
+        "💬 Как тут жить",
+        "🐾 Животные и переезд",
+        "⚠️ Реальность Таиланда",
     ]
     if path and (path[0] in important or any(s in path for s in important)):
         if HELP_ANALYZE_ID:
@@ -598,6 +898,44 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
+        if data.startswith("lead:"):
+            parts = data.split(":", 2)
+            action_type = parts[1] if len(parts) > 1 else "unknown"
+            topic = parts[2] if len(parts) > 2 else ""
+
+            _LEAD_MESSAGES = {
+                "analyze": "📋 Заявка на персональный разбор принята.\n\nМы передадим её администратору. Как правило, ответ приходит в течение 1–2 рабочих дней.",
+                "specialist": "🤝 Заявка на специалиста принята.\n\nМы подберём подходящего специалиста и свяжемся с тобой.",
+                "report": "⚠️ Спасибо за сигнал!\n\nМы проверим информацию и обновим её, если она устарела.",
+            }
+            reply_text = _LEAD_MESSAGES.get(action_type, "Заявка принята.")
+            save_lead(user.id, user.username, action_type, topic)
+            logger.info(f"LEAD user_id={user.id} username={user.username} action={action_type} topic={topic}")
+
+            admin_id = os.getenv("ADMIN_USER_ID")
+            if admin_id:
+                try:
+                    _LEAD_LABELS = {
+                        "analyze": "📋 Персональный разбор",
+                        "specialist": "🤝 Заявка на специалиста",
+                        "report": "⚠️ Устаревшая информация",
+                    }
+                    label = _LEAD_LABELS.get(action_type, action_type)
+                    admin_text = (
+                        f"🔔 Новая заявка\n\n"
+                        f"Тип: {label}\n"
+                        f"Тема: {topic or '—'}\n"
+                        f"Telegram ID: {user.id}\n"
+                        f"Username: @{user.username or 'нет'}\n"
+                        f"Время: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                    )
+                    await context.bot.send_message(chat_id=int(admin_id), text=admin_text)
+                except Exception as e:
+                    logger.error(f"admin notify error: {e}")
+
+            await query.answer(reply_text, show_alert=True)
+            return
+
         if data.startswith("nav:"):
             parts = data.split(":")
             if len(parts) != 3:
@@ -719,6 +1057,7 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("📆 За неделю", callback_data="admin:week")],
         [InlineKeyboardButton("👥 Топ пользователей", callback_data="admin:users")],
         [InlineKeyboardButton("🕒 Последние посещения", callback_data="admin:recent")],
+        [InlineKeyboardButton("📋 Заявки (leads)", callback_data="admin:leads")],
     ])
     await update.effective_message.reply_text("📊 Админ-панель", reply_markup=keyboard)
 
@@ -751,6 +1090,13 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "admin:recent":
         visits = get_recent_visits(12)
         text = "🕒 Последние посещения\n\n" + ("\n".join([f"• {u} → {s}" for u, s, _ in visits]) if visits else "Пока нет данных.")
+    elif data == "admin:leads":
+        leads = get_leads(20)
+        if leads:
+            lines = [f"• @{u or '—'} [{a}] {t} — {c[:16]}" for u, a, t, c in leads]
+            text = "📋 Последние заявки\n\n" + "\n".join(lines)
+        else:
+            text = "📋 Заявок пока нет."
     else:
         text = "Неизвестная команда"
 
